@@ -19,6 +19,13 @@ const ensureBoolean = (value: any): boolean => {
   return false;
 };
 
+// Helper to ensure boolean values are ALWAYS booleans - used internally
+const toStrictBoolean = (value: any): boolean => {
+  if (value === true || value === 'true' || value === 1 || value === '1') return true;
+  if (value === false || value === 'false' || value === 0 || value === '0') return false;
+  return Boolean(value);
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -27,19 +34,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   notifications: [],
 
   login: (user: User) => {
-    set({
+    set((state) => ({
       user,
-      isAuthenticated: true, // Explicitly set as boolean
-      isLoading: false,
-    });
+      isAuthenticated: toStrictBoolean(true), // Force boolean conversion
+      isLoading: toStrictBoolean(false),
+    }));
   },
 
   logout: () => {
-    set({
+    set((state) => ({
       user: null,
-      isAuthenticated: false, // Explicitly set as boolean
+      isAuthenticated: toStrictBoolean(false), // Force boolean conversion
       notifications: [],
-    });
+    }));
   },
 
   updateUser: (userData: Partial<User>) => {

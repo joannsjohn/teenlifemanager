@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuthStore } from './src/store/authStore';
@@ -10,32 +10,30 @@ import MainTabNavigator from './src/navigation/MainTabNavigator';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Helper function to ensure boolean type
-const toBoolean = (value: any): boolean => {
-  if (value === true) return true;
-  if (value === false) return false;
-  if (typeof value === 'string') {
-    const lower = value.toLowerCase();
-    return lower === 'true' || lower === '1';
-  }
-  if (typeof value === 'number') return value !== 0;
-  return false;
-};
-
 export default function App() {
-  // Use selector with explicit boolean conversion - ensure it's ALWAYS a boolean
-  const isAuthenticated: boolean = useAuthStore((state) => {
-    const auth = state.isAuthenticated;
-    return toBoolean(auth);
-  });
+  // Get raw value from store
+  const rawAuth = useAuthStore((state) => state.isAuthenticated);
+  
+  // Convert to strict boolean using useMemo to ensure it's always boolean
+  const isAuthenticated = useMemo(() => {
+    if (rawAuth === true) return true;
+    if (rawAuth === false) return false;
+    if (typeof rawAuth === 'string') {
+      return rawAuth === 'true' || rawAuth === '1';
+    }
+    if (typeof rawAuth === 'number') {
+      return rawAuth !== 0;
+    }
+    return false;
+  }, [rawAuth]);
 
-  // Double-check: ensure it's a boolean before using
-  const authValue: boolean = Boolean(isAuthenticated);
+  // Ensure it's a boolean before using in JSX
+  const showMain: boolean = isAuthenticated === true;
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: Boolean(false) }}>
-        {authValue ? (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {showMain ? (
           <Stack.Screen name="Main" component={MainTabNavigator} />
         ) : (
           <>
