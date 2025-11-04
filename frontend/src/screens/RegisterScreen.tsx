@@ -140,7 +140,7 @@ export default function RegisterScreen() {
                 placeholder="Password"
                 value={formData.password}
                 onChangeText={(value) => handleInputChange('password', value)}
-                secureTextEntry={!showPassword}
+                secureTextEntry={Boolean(!showPassword)}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -163,7 +163,7 @@ export default function RegisterScreen() {
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                secureTextEntry={!showConfirmPassword}
+                secureTextEntry={Boolean(!showConfirmPassword)}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -207,7 +207,7 @@ export default function RegisterScreen() {
             <TouchableOpacity
               style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
               onPress={handleRegister}
-              disabled={isLoading}
+              disabled={Boolean(isLoading)}
             >
               <Text style={styles.registerButtonText}>
                 {isLoading ? 'Creating Account...' : 'Create Account'}

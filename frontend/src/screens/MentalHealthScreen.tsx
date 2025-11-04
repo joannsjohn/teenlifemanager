@@ -101,7 +101,7 @@ const mockAchievements: Achievement[] = [
 
 export default function MentalHealthScreen() {
   const [activeTab, setActiveTab] = useState<'mood' | 'resources' | 'achievements'>('mood');
-  const [showMoodModal, setShowMoodModal] = useState(false);
+  const [showMoodModal, setShowMoodModal] = useState<boolean>(false);
   const [currentMood, setCurrentMood] = useState({
     mood: 5,
     energy: 5,
@@ -367,7 +367,7 @@ export default function MentalHealthScreen() {
       </TouchableOpacity>
 
       <Modal
-        visible={showMoodModal}
+        visible={Boolean(showMoodModal)}
         animationType="slide"
         transparent={true}
       >

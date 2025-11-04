@@ -92,7 +92,7 @@ export default function LoginScreen() {
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry={!showPassword}
+              secureTextEntry={Boolean(!showPassword)}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -115,7 +115,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={Boolean(isLoading)}
           >
             <Text style={styles.loginButtonText}>
               {isLoading ? 'Signing In...' : 'Sign In'}

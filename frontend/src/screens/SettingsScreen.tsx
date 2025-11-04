@@ -13,16 +13,38 @@ import { useAuthStore } from '../store/authStore';
 
 export default function SettingsScreen() {
   const { user, updateUser, setTheme } = useAuthStore();
+  
+  // Ensure boolean values from store are properly converted
+  const getBooleanValue = (value: any): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value === 'true';
+    return false;
+  };
+
   const [notifications, setNotifications] = useState({
-    schedule: true,
-    volunteering: true,
-    social: true,
-    mentalHealth: true,
+    schedule: user?.preferences?.notifications?.schedule !== undefined 
+      ? getBooleanValue(user.preferences.notifications.schedule) 
+      : true,
+    volunteering: user?.preferences?.notifications?.volunteering !== undefined
+      ? getBooleanValue(user.preferences.notifications.volunteering)
+      : true,
+    social: user?.preferences?.notifications?.social !== undefined
+      ? getBooleanValue(user.preferences.notifications.social)
+      : true,
+    mentalHealth: user?.preferences?.notifications?.mentalHealth !== undefined
+      ? getBooleanValue(user.preferences.notifications.mentalHealth)
+      : true,
   });
   const [privacy, setPrivacy] = useState({
-    shareSchedule: false,
-    shareVolunteering: true,
-    shareMood: false,
+    shareSchedule: user?.preferences?.privacy?.shareSchedule !== undefined
+      ? getBooleanValue(user.preferences.privacy.shareSchedule)
+      : false,
+    shareVolunteering: user?.preferences?.privacy?.shareVolunteering !== undefined
+      ? getBooleanValue(user.preferences.privacy.shareVolunteering)
+      : true,
+    shareMood: user?.preferences?.privacy?.shareMood !== undefined
+      ? getBooleanValue(user.preferences.privacy.shareMood)
+      : false,
   });
 
   const handleNotificationToggle = (key: keyof typeof notifications) => {
