@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../config/database';
 import { env } from '../config/env';
 import { RegisterDto, LoginDto, AuthResponse, JWTPayload } from '../types';
@@ -36,6 +36,8 @@ export class AuthService {
         displayName: true,
         nickname: true,
         avatar: true,
+        googleId: true,
+        appleId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -79,6 +81,8 @@ export class AuthService {
         displayName: user.displayName,
         nickname: user.nickname,
         avatar: user.avatar,
+        googleId: user.googleId,
+        appleId: user.appleId,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -102,10 +106,11 @@ export class AuthService {
         throw new AuthenticationError('User not found');
       }
 
+      const secret = env.jwtSecret || 'default-secret';
       const accessToken = jwt.sign(
         { userId: user.id, email: user.email },
-        env.jwtSecret,
-        { expiresIn: env.jwtExpiresIn }
+        secret,
+        { expiresIn: env.jwtExpiresIn } as SignOptions
       );
 
       return { accessToken };
@@ -122,14 +127,11 @@ export class AuthService {
     refreshToken: string;
   } {
     const payload: JWTPayload = { userId, email };
+    const secret = env.jwtSecret || 'default-secret';
+    const refreshSecret = env.jwtRefreshSecret || 'default-refresh-secret';
 
-    const accessToken = jwt.sign(payload, env.jwtSecret, {
-      expiresIn: env.jwtExpiresIn,
-    });
-
-    const refreshToken = jwt.sign(payload, env.jwtRefreshSecret, {
-      expiresIn: env.jwtRefreshExpiresIn,
-    });
+    const accessToken = jwt.sign(payload, secret, { expiresIn: env.jwtExpiresIn } as SignOptions);
+    const refreshToken = jwt.sign(payload, refreshSecret, { expiresIn: env.jwtRefreshExpiresIn } as SignOptions);
 
     return { accessToken, refreshToken };
   }

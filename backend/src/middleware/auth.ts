@@ -7,7 +7,7 @@ import prisma from '../config/database';
 
 export const authenticate = async (
   req: AuthRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   try {
@@ -19,7 +19,7 @@ export const authenticate = async (
 
     const token = authHeader.substring(7);
 
-    const decoded = jwt.verify(token, env.jwtSecret) as JWTPayload;
+    const decoded = jwt.verify(token, env.jwtSecret || 'default-secret') as JWTPayload;
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -29,6 +29,8 @@ export const authenticate = async (
         displayName: true,
         nickname: true,
         avatar: true,
+        googleId: true,
+        appleId: true,
         createdAt: true,
         updatedAt: true,
       },

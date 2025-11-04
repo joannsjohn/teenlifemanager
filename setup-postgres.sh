@@ -55,3 +55,4 @@ echo "3. Run: cd backend && npm run prisma:migrate"
 echo "4. Run: cd backend && npm run dev"
 
 
+
