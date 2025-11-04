@@ -11,6 +11,14 @@ interface AuthState extends AppState {
   markNotificationAsRead: (notificationId: string) => void;
 }
 
+// Helper to ensure boolean values are always booleans
+const ensureBoolean = (value: any): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value === 'true' || value === '1';
+  if (typeof value === 'number') return value !== 0;
+  return false;
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -21,7 +29,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: (user: User) => {
     set({
       user,
-      isAuthenticated: true,
+      isAuthenticated: true, // Explicitly set as boolean
       isLoading: false,
     });
   },
@@ -29,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     set({
       user: null,
-      isAuthenticated: false,
+      isAuthenticated: false, // Explicitly set as boolean
       notifications: [],
     });
   },

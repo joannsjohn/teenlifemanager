@@ -226,7 +226,7 @@ export default function SocialScreen() {
                 data={pendingRequests}
                 keyExtractor={(item) => item.id}
                 renderItem={renderFriend}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={Boolean(false)}
               />
             </View>
           )}
@@ -237,7 +237,7 @@ export default function SocialScreen() {
               data={acceptedFriends}
               keyExtractor={(item) => item.id}
               renderItem={renderFriend}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={Boolean(false)}
             />
           </View>
         </View>
@@ -249,7 +249,7 @@ export default function SocialScreen() {
             data={mockActivities}
             keyExtractor={(item) => item.id}
             renderItem={renderActivity}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         </ScrollView>
       )}

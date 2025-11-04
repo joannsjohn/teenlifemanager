@@ -116,7 +116,7 @@ export default function RegisterScreen() {
                 value={formData.name}
                 onChangeText={(value) => handleInputChange('name', value)}
                 autoCapitalize="words"
-                autoCorrect={false}
+                autoCorrect={Boolean(false)}
               />
             </View>
 
@@ -129,7 +129,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
+                autoCorrect={Boolean(false)}
               />
             </View>
 
@@ -142,7 +142,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('password', value)}
                 secureTextEntry={Boolean(!showPassword)}
                 autoCapitalize="none"
-                autoCorrect={false}
+                autoCorrect={Boolean(false)}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -165,7 +165,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('confirmPassword', value)}
                 secureTextEntry={Boolean(!showConfirmPassword)}
                 autoCapitalize="none"
-                autoCorrect={false}
+                autoCorrect={Boolean(false)}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}

@@ -212,7 +212,7 @@ export default function VolunteeringScreen() {
             data={mockRecords}
             keyExtractor={(item) => item.id}
             renderItem={renderRecord}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         )}
 
@@ -221,7 +221,7 @@ export default function VolunteeringScreen() {
             data={mockOrganizations}
             keyExtractor={(item) => item.id}
             renderItem={renderOrganization}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         )}
 
@@ -239,7 +239,7 @@ export default function VolunteeringScreen() {
               placeholder="Description (optional)"
               value={newRecord.description}
               onChangeText={(text) => setNewRecord({ ...newRecord, description: text })}
-              multiline
+              multiline={Boolean(true)}
             />
             <TouchableOpacity style={styles.submitButton} onPress={handleAddRecord}>
               <Text style={styles.submitButtonText}>Add Record</Text>

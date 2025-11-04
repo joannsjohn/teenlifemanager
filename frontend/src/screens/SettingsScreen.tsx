@@ -157,7 +157,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Schedule Reminders</Text>
           </View>
           <Switch
-            value={notifications.schedule}
+            value={Boolean(notifications.schedule)}
             onValueChange={() => handleNotificationToggle('schedule')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -172,7 +172,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Volunteering Updates</Text>
           </View>
           <Switch
-            value={notifications.volunteering}
+            value={Boolean(notifications.volunteering)}
             onValueChange={() => handleNotificationToggle('volunteering')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -187,7 +187,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Social Activities</Text>
           </View>
           <Switch
-            value={notifications.social}
+            value={Boolean(notifications.social)}
             onValueChange={() => handleNotificationToggle('social')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -202,7 +202,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Mental Health Reminders</Text>
           </View>
           <Switch
-            value={notifications.mentalHealth}
+            value={Boolean(notifications.mentalHealth)}
             onValueChange={() => handleNotificationToggle('mentalHealth')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -221,7 +221,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Share Schedule with Friends</Text>
           </View>
           <Switch
-            value={privacy.shareSchedule}
+            value={Boolean(privacy.shareSchedule)}
             onValueChange={() => handlePrivacyToggle('shareSchedule')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -236,7 +236,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Share Volunteering Hours</Text>
           </View>
           <Switch
-            value={privacy.shareVolunteering}
+            value={Boolean(privacy.shareVolunteering)}
             onValueChange={() => handlePrivacyToggle('shareVolunteering')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"
@@ -251,7 +251,7 @@ export default function SettingsScreen() {
             <Text style={styles.settingText}>Share Mood Updates</Text>
           </View>
           <Switch
-            value={privacy.shareMood}
+            value={Boolean(privacy.shareMood)}
             onValueChange={() => handlePrivacyToggle('shareMood')}
             trackColor={{ false: '#e5e7eb', true: '#6366f1' }}
             thumbColor="#fff"

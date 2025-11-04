@@ -146,7 +146,7 @@ export default function ScheduleScreen() {
             data={mockEvents}
             keyExtractor={(item) => item.id}
             renderItem={renderEvent}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         </ScrollView>
       )}

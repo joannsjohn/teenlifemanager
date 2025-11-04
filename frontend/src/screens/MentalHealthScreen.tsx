@@ -336,7 +336,7 @@ export default function MentalHealthScreen() {
             data={mockMoodEntries}
             keyExtractor={(item) => item.id}
             renderItem={renderMoodEntry}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         )}
 
@@ -345,7 +345,7 @@ export default function MentalHealthScreen() {
             data={mockResources}
             keyExtractor={(item) => item.id}
             renderItem={renderResource}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         )}
 
@@ -354,7 +354,7 @@ export default function MentalHealthScreen() {
             data={mockAchievements}
             keyExtractor={(item) => item.id}
             renderItem={renderAchievement}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={Boolean(false)}
           />
         )}
       </ScrollView>
@@ -395,7 +395,7 @@ export default function MentalHealthScreen() {
               placeholder="How was your day? (optional)"
               value={currentMood.notes}
               onChangeText={(text) => setCurrentMood({ ...currentMood, notes: text })}
-              multiline
+              multiline={Boolean(true)}
             />
 
             <View style={styles.modalButtons}>

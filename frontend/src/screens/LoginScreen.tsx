@@ -81,7 +81,7 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              autoCorrect={false}
+              autoCorrect={Boolean(false)}
             />
           </View>
 
@@ -94,7 +94,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry={Boolean(!showPassword)}
               autoCapitalize="none"
-              autoCorrect={false}
+              autoCorrect={Boolean(false)}
             />
             <TouchableOpacity
               style={styles.eyeIcon}
