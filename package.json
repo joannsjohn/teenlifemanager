@@ -1,0 +1,44 @@
+{
+  "name": "teen-life-manager-monorepo",
+  "version": "1.0.0",
+  "description": "Teen Life Manager - Monorepo containing frontend (React Native) and backend (Node.js API)",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "frontend:dev": "cd frontend && npm start",
+    "frontend:ios": "cd frontend && npm run ios",
+    "frontend:android": "cd frontend && npm run android",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:build": "cd backend && npm run build",
+    "backend:prisma": "cd backend && npm run prisma:generate",
+    "backend:migrate": "cd backend && npm run prisma:migrate",
+    "type-check": "cd frontend && npm run type-check && cd ../backend && npm run type-check",
+    "clean": "rm -rf frontend/node_modules backend/node_modules frontend/dist backend/dist",
+    "db:start": "docker-compose up -d",
+    "db:stop": "docker-compose down",
+    "db:studio": "cd backend && npm run prisma:studio"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "teen-life-manager",
+    "react-native",
+    "expo",
+    "nodejs",
+    "typescript",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+

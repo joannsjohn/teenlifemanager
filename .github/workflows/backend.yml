@@ -1,0 +1,130 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: teenlifemanager_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npm run prisma:generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/teenlifemanager_test
+
+      - name: Run database migrations
+        working-directory: ./backend
+        run: npm run prisma:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/teenlifemanager_test
+
+      - name: Type check
+        working-directory: ./backend
+        run: npm run type-check
+
+      # Uncomment when tests are added
+      # - name: Run tests
+      #   working-directory: ./backend
+      #   run: npm test
+      #   env:
+      #     DATABASE_URL: postgresql://postgres:postgres@localhost:5432/teenlifemanager_test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npm run prisma:generate
+
+      - name: Build
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build Docker image
+        run: |
+          cd backend
+          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/teenlife-api:${{ github.sha }} --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/teenlife-api:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy teenlife-api \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/teenlife-api:${{ github.sha }} \
+            --platform managed \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --add-cloudsql-instances ${{ secrets.GCP_PROJECT_ID }}:us-central1:${{ secrets.GCP_DB_INSTANCE }} \
+            --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --set-env-vars JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --set-env-vars JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
+            --set-env-vars NODE_ENV="production" \
+            --memory 512Mi \
+            --cpu 1 \
+            --max-instances 10
+

@@ -1,0 +1,155 @@
+// Prisma schema for Teen Life Manager
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String?  // null for OAuth users
+  displayName   String
+  nickname      String?  // Pseudonymous profile for safety
+  avatar        String?
+  googleId      String?  @unique
+  appleId       String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  events          Event[]
+  volunteerHours  VolunteerHour[]
+  moodEntries     MoodEntry[]
+  journalEntries  JournalEntry[]
+  friends         Friendship[] @relation("UserFriends")
+  friendOf        Friendship[] @relation("FriendOf")
+  achievements    UserAchievement[]
+  
+  @@index([email])
+  @@index([googleId])
+  @@index([appleId])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  category    String   // homework, exam, personal, volunteer
+  color       String?
+  location    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([startTime])
+  @@index([category])
+}
+
+model VolunteerHour {
+  id              String   @id @default(uuid())
+  organization    String
+  description      String
+  hours            Float
+  date             DateTime
+  location         String?
+  verified         Boolean  @default(false)
+  verificationCode String?  @unique
+  supervisorEmail  String?
+  supervisorName  String?
+  userId           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([date])
+  @@index([organization])
+  @@index([verificationCode])
+}
+
+model MoodEntry {
+  id          String   @id @default(uuid())
+  mood        Int      // 1-10 scale
+  emotions    String[] // ["happy", "anxious", "grateful", etc.]
+  notes       String?
+  userId      String
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([mood])
+}
+
+model JournalEntry {
+  id          String   @id @default(uuid())
+  content     String
+  isVoice     Boolean  @default(false)
+  audioUrl    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending") // pending, accepted, blocked
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User     @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  icon        String
+  type        String   // mood_streak, volunteer_hours, journal_entries, etc.
+  threshold   Int?     // Optional threshold value
+  
+  users       UserAchievement[]
+  
+  @@unique([name])
+  @@index([type])
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
