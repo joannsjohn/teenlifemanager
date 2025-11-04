@@ -11,18 +11,26 @@ import MainTabNavigator from './src/navigation/MainTabNavigator';
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const { isAuthenticated } = useAuthStore();
+  // Use selector to get boolean value, ensuring it's always a boolean type
+  const isAuthenticated = useAuthStore((state) => {
+    const auth = state.isAuthenticated;
+    // Handle any type conversion issues
+    if (auth === true) return true;
+    if (auth === false) return false;
+    if (typeof auth === 'string') return auth === 'true';
+    return false;
+  });
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
+        {isAuthenticated === true ? (
+          <Stack.Screen name="Main" component={MainTabNavigator} />
+        ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
-        ) : (
-          <Stack.Screen name="Main" component={MainTabNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
