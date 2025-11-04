@@ -30,15 +30,34 @@ export default function App() {
   // Ensure it's a boolean before using in JSX
   const showMain: boolean = isAuthenticated === true;
 
+  // Ensure all navigation props are explicitly booleans
+  const screenOptions = useMemo(() => ({
+    headerShown: Boolean(false),
+    gestureEnabled: Boolean(true),
+    animationEnabled: Boolean(true),
+  }), []);
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={screenOptions}>
         {showMain ? (
-          <Stack.Screen name="Main" component={MainTabNavigator} />
+          <Stack.Screen 
+            name="Main" 
+            component={MainTabNavigator}
+            options={{ headerShown: Boolean(false) }}
+          />
         ) : (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen 
+              name="Login" 
+              component={LoginScreen}
+              options={{ headerShown: Boolean(false) }}
+            />
+            <Stack.Screen 
+              name="Register" 
+              component={RegisterScreen}
+              options={{ headerShown: Boolean(false) }}
+            />
           </>
         )}
       </Stack.Navigator>

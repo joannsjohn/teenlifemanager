@@ -17,18 +17,20 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
+          // Ensure focused is a boolean
+          const isFocused = Boolean(focused);
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Schedule') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
+            iconName = isFocused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Volunteering') {
-            iconName = focused ? 'heart' : 'heart-outline';
+            iconName = isFocused ? 'heart' : 'heart-outline';
           } else if (route.name === 'Social') {
-            iconName = focused ? 'people' : 'people-outline';
+            iconName = isFocused ? 'people' : 'people-outline';
           } else if (route.name === 'MentalHealth') {
-            iconName = focused ? 'happy' : 'happy-outline';
+            iconName = isFocused ? 'happy' : 'happy-outline';
           } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+            iconName = isFocused ? 'person' : 'person-outline';
           } else {
             iconName = 'help-outline';
           }
@@ -37,6 +39,7 @@ export default function MainTabNavigator() {
         },
         tabBarActiveTintColor: '#6366f1',
         tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: Boolean(true),
         tabBarStyle: {
           paddingBottom: Platform.OS === 'ios' ? 20 : 5,
           height: Platform.OS === 'ios' ? 85 : 60,
