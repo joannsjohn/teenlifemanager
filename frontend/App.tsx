@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Image, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showImages, setShowImages] = useState(false);
 
   const handleLogin = () => {
     if (email && password) {
@@ -20,16 +19,6 @@ export default function App() {
   const handleSignUp = () => {
     Alert.alert('Sign Up', 'Registration form would open here!');
   };
-
-  const handleJaydenLilly = () => {
-    setShowImages(true);
-  };
-
-  const images = [
-    { id: 1, uri: 'https://imgur.com/omncmrP.jpg', title: 'Jayden & Lilly Photo 1' },
-    { id: 2, uri: 'https://imgur.com/TD1uKFa.jpg', title: 'Jayden & Lilly Photo 2' },
-    { id: 3, uri: 'https://imgur.com/Bqwvfvd.jpg', title: 'Jayden & Lilly Photo 3' },
-  ];
 
   if (isLoggedIn) {
     return (
@@ -54,35 +43,11 @@ export default function App() {
           <TouchableOpacity style={styles.tab}>
             <Text style={styles.tabText}>👤 Profile</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, styles.specialTab]} onPress={handleJaydenLilly}>
-            <Text style={styles.tabText}>💕 Jayden & Lilly</Text>
-          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={() => setIsLoggedIn(false)}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-
-        <Modal visible={showImages} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>💕 Jayden & Lilly</Text>
-                <TouchableOpacity onPress={() => setShowImages(false)}>
-                  <Text style={styles.closeButton}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <ScrollView style={styles.imageContainer}>
-                {images.map((image) => (
-                  <View key={image.id} style={styles.imageItem}>
-                    <Image source={{ uri: image.uri }} style={styles.image} />
-                    <Text style={styles.imageTitle}>{image.title}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
       </View>
     );
   }
@@ -119,9 +84,7 @@ export default function App() {
       </View>
     </View>
   );
-}
-
-const styles = StyleSheet.create({
+}const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -208,56 +171,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  specialTab: {
-    backgroundColor: '#fce7f3',
-    borderColor: '#ec4899',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ec4899',
-  },
-  closeButton: {
-    fontSize: 24,
-    color: '#6b7280',
-    fontWeight: 'bold',
-  },
-  imageContainer: {
-    maxHeight: 400,
-  },
-  imageItem: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  image: {
-    width: 200,
-    height: 250,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  imageTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-    textAlign: 'center',
-  },
 });
+
