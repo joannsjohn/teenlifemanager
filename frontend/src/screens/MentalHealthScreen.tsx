@@ -330,13 +330,14 @@ export default function MentalHealthScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         {activeTab === 'mood' && (
           <FlatList
             data={mockMoodEntries}
             keyExtractor={(item) => item.id}
             renderItem={renderMoodEntry}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
         )}
 
@@ -345,7 +346,8 @@ export default function MentalHealthScreen() {
             data={mockResources}
             keyExtractor={(item) => item.id}
             renderItem={renderResource}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
         )}
 
@@ -354,10 +356,11 @@ export default function MentalHealthScreen() {
             data={mockAchievements}
             keyExtractor={(item) => item.id}
             renderItem={renderAchievement}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
         )}
-      </ScrollView>
+      </View>
 
       <TouchableOpacity 
         style={styles.addButton}
@@ -367,7 +370,7 @@ export default function MentalHealthScreen() {
       </TouchableOpacity>
 
       <Modal
-        visible={Boolean(showMoodModal)}
+        visible={showMoodModal}
         animationType="slide"
         transparent={true}
       >
@@ -395,7 +398,7 @@ export default function MentalHealthScreen() {
               placeholder="How was your day? (optional)"
               value={currentMood.notes}
               onChangeText={(text) => setCurrentMood({ ...currentMood, notes: text })}
-              multiline={Boolean(true)}
+              multiline={true}
             />
 
             <View style={styles.modalButtons}>

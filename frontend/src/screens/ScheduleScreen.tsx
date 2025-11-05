@@ -141,14 +141,15 @@ export default function ScheduleScreen() {
           />
         </View>
       ) : (
-        <ScrollView style={styles.listContainer}>
+        <View style={styles.listContainer}>
           <FlatList
             data={mockEvents}
             keyExtractor={(item) => item.id}
             renderItem={renderEvent}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.listContainer}
           />
-        </ScrollView>
+        </View>
       )}
 
       <View style={styles.selectedDateContainer}>
@@ -165,14 +166,15 @@ export default function ScheduleScreen() {
         </Text>
       </View>
 
-      <ScrollView style={styles.eventsContainer}>
+      <View style={styles.eventsContainer}>
         <FlatList
           data={todayEvents}
           keyExtractor={(item) => item.id}
           renderItem={renderEvent}
           showsVerticalScrollIndicator={false}
+          style={styles.eventsContainer}
         />
-      </ScrollView>
+      </View>
 
       <TouchableOpacity style={styles.addButton}>
         <Ionicons name="add" size={24} color="#fff" />

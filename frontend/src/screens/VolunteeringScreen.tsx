@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   TextInput,
@@ -206,13 +205,14 @@ export default function VolunteeringScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         {activeTab === 'records' && (
           <FlatList
             data={mockRecords}
             keyExtractor={(item) => item.id}
             renderItem={renderRecord}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
         )}
 
@@ -221,7 +221,8 @@ export default function VolunteeringScreen() {
             data={mockOrganizations}
             keyExtractor={(item) => item.id}
             renderItem={renderOrganization}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
         )}
 
@@ -239,14 +240,14 @@ export default function VolunteeringScreen() {
               placeholder="Description (optional)"
               value={newRecord.description}
               onChangeText={(text) => setNewRecord({ ...newRecord, description: text })}
-              multiline={Boolean(true)}
+              multiline={true}
             />
             <TouchableOpacity style={styles.submitButton} onPress={handleAddRecord}>
               <Text style={styles.submitButtonText}>Add Record</Text>
             </TouchableOpacity>
           </View>
         )}
-      </ScrollView>
+      </View>
 
       <TouchableOpacity style={styles.addButton}>
         <Ionicons name="add" size={24} color="#fff" />

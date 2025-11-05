@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '../navigation/SimpleNavigation';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -19,6 +20,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuthStore();
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -57,6 +59,7 @@ export default function LoginScreen() {
       
       login(mockUser);
       setIsLoading(false);
+      navigation.navigate('Main');
     }, 1000);
   };
 
@@ -81,7 +84,7 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              autoCorrect={Boolean(false)}
+              autoCorrect={false}
             />
           </View>
 
@@ -94,7 +97,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry={Boolean(!showPassword)}
               autoCapitalize="none"
-              autoCorrect={Boolean(false)}
+              autoCorrect={false}
             />
             <TouchableOpacity
               style={styles.eyeIcon}
@@ -141,7 +144,7 @@ export default function LoginScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.footerLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>

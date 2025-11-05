@@ -226,7 +226,7 @@ export default function SocialScreen() {
                 data={pendingRequests}
                 keyExtractor={(item) => item.id}
                 renderItem={renderFriend}
-                showsVerticalScrollIndicator={Boolean(false)}
+                showsVerticalScrollIndicator={false}
               />
             </View>
           )}
@@ -237,21 +237,22 @@ export default function SocialScreen() {
               data={acceptedFriends}
               keyExtractor={(item) => item.id}
               renderItem={renderFriend}
-              showsVerticalScrollIndicator={Boolean(false)}
+              showsVerticalScrollIndicator={false}
             />
           </View>
         </View>
       )}
 
       {activeTab === 'activities' && (
-        <ScrollView style={styles.contentContainer}>
+        <View style={styles.contentContainer}>
           <FlatList
             data={mockActivities}
             keyExtractor={(item) => item.id}
             renderItem={renderActivity}
-            showsVerticalScrollIndicator={Boolean(false)}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentContainer}
           />
-        </ScrollView>
+        </View>
       )}
 
       {activeTab === 'discover' && (

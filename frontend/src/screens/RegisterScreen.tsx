@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '../navigation/SimpleNavigation';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -27,6 +28,7 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuthStore();
+  const navigation = useNavigation();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -87,6 +89,7 @@ export default function RegisterScreen() {
       
       login(mockUser);
       setIsLoading(false);
+      navigation.navigate('Main');
     }, 1000);
   };
 
@@ -116,7 +119,7 @@ export default function RegisterScreen() {
                 value={formData.name}
                 onChangeText={(value) => handleInputChange('name', value)}
                 autoCapitalize="words"
-                autoCorrect={Boolean(false)}
+                autoCorrect={false}
               />
             </View>
 
@@ -129,7 +132,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={Boolean(false)}
+                autoCorrect={false}
               />
             </View>
 
@@ -142,7 +145,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('password', value)}
                 secureTextEntry={Boolean(!showPassword)}
                 autoCapitalize="none"
-                autoCorrect={Boolean(false)}
+                autoCorrect={false}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -165,7 +168,7 @@ export default function RegisterScreen() {
                 onChangeText={(value) => handleInputChange('confirmPassword', value)}
                 secureTextEntry={Boolean(!showConfirmPassword)}
                 autoCapitalize="none"
-                autoCorrect={Boolean(false)}
+                autoCorrect={false}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -233,7 +236,7 @@ export default function RegisterScreen() {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>

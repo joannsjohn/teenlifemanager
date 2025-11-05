@@ -34,19 +34,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   notifications: [],
 
   login: (user: User) => {
+    console.log('[authStore] DEBUG - login called with user:', user);
+    const authValue = true;
+    const loadingValue = false;
+    console.log('[authStore] DEBUG - Setting isAuthenticated:', authValue, 'Type:', typeof authValue);
     set((state) => ({
       user,
-      isAuthenticated: toStrictBoolean(true), // Force boolean conversion
-      isLoading: toStrictBoolean(false),
+      isAuthenticated: authValue,
+      isLoading: loadingValue,
     }));
+    console.log('[authStore] DEBUG - State updated, new isAuthenticated:', get().isAuthenticated, 'Type:', typeof get().isAuthenticated);
   },
 
   logout: () => {
+    console.log('[authStore] DEBUG - logout called');
+    const authValue = false;
+    console.log('[authStore] DEBUG - Setting isAuthenticated:', authValue, 'Type:', typeof authValue);
     set((state) => ({
       user: null,
-      isAuthenticated: toStrictBoolean(false), // Force boolean conversion
+      isAuthenticated: authValue,
       notifications: [],
     }));
+    console.log('[authStore] DEBUG - State updated, new isAuthenticated:', get().isAuthenticated, 'Type:', typeof get().isAuthenticated);
   },
 
   updateUser: (userData: Partial<User>) => {
