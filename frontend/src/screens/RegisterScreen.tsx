@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useNavigation } from '../navigation/SimpleNavigation';
 import GradientButton from '../components/common/GradientButton';
 import { typography, spacing, borderRadius, shadows, colors } from '../theme';
 import { fadeIn } from '../utils/animations';
+import { authService } from '../services/authService';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -35,50 +36,70 @@ export default function RegisterScreen() {
   const { login } = useAuthStore();
   const navigation = useNavigation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const passwordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     fadeIn(fadeAnim, 400).start();
   }, []);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
   const handleRegister = async () => {
+    console.log('[RegisterScreen] handleRegister called');
     const { name, email, password, confirmPassword, age, grade } = formData;
     
+    console.log('[RegisterScreen] Form data:', { name, email, hasPassword: !!password, hasConfirmPassword: !!confirmPassword, age, grade });
+    
     if (!name || !email || !password || !confirmPassword || !age || !grade) {
+      console.log('[RegisterScreen] Validation failed: missing fields');
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
+      console.log('[RegisterScreen] Validation failed: passwords do not match');
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
+      console.log('[RegisterScreen] Validation failed: password too short');
       Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
     const ageNum = parseInt(age);
-    if (ageNum < 13 || ageNum > 19) {
+    if (isNaN(ageNum) || ageNum < 13 || ageNum > 19) {
+      console.log('[RegisterScreen] Validation failed: invalid age');
       Alert.alert('Error', 'Age must be between 13 and 19');
       return;
     }
 
+    console.log('[RegisterScreen] Validation passed, calling API...');
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      // Mock user data
-      const mockUser = {
-        id: '1',
-        name: name,
-        email: email,
+    try {
+      // Call backend API
+      const response = await authService.register({
+        email,
+        password,
+        displayName: name,
+        nickname: name,
+      });
+      
+      console.log('[RegisterScreen] Registration successful:', response.user?.email);
+
+      // Map backend user to frontend User type
+      const user = {
+        id: response.user.id || '',
+        name: response.user.displayName || name || 'User',
+        email: response.user.email || email,
         age: ageNum,
         grade: grade,
+        profileImage: response.user.avatar || '',
         preferences: {
           theme: 'light' as const,
           notifications: {
@@ -93,14 +114,30 @@ export default function RegisterScreen() {
             shareMood: false,
           },
         },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: response.user.createdAt ? new Date(response.user.createdAt) : new Date(),
+        updatedAt: response.user.updatedAt ? new Date(response.user.updatedAt) : new Date(),
       };
       
-      login(mockUser);
+      // Validate user object before login
+      if (!user.id || !user.email) {
+        throw new Error('Invalid user data received from server');
+      }
+      
+      // Login with the user and token
+      login(user, response.accessToken);
       setIsLoading(false);
-      navigation.navigate('Main');
-    }, 1000);
+      
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        console.log('[RegisterScreen] Navigating to Main screen');
+        navigation.navigate('Main');
+      }, 100);
+    } catch (error: any) {
+      setIsLoading(false);
+      console.error('[RegisterScreen] Registration error:', error);
+      const errorMessage = error.message || 'Failed to create account. Please try again.';
+      Alert.alert('Registration Failed', errorMessage);
+    }
   };
 
   const gradeOptions = [
@@ -120,7 +157,7 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account 🎉</Text>
+            <Text style={styles.title} numberOfLines={1}>Create Account 🎉</Text>
             <Text style={styles.subtitle}>Join Teen Life Manager today</Text>
           </View>
 
@@ -155,6 +192,7 @@ export default function RegisterScreen() {
             <View style={[styles.inputContainer, shadows.sm]}>
               <Ionicons name="lock-closed" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
+                ref={passwordInputRef}
                 style={styles.input}
                 placeholder="Password"
                 placeholderTextColor={colors.gray500}
@@ -163,10 +201,28 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="default"
+                returnKeyType="next"
+                enablesReturnKeyAutomatically={true}
+                blurOnSubmit={false}
+                importantForAutofill="no"
+                textContentType="none"
+                autoComplete="off"
+                clearButtonMode="never"
+                editable={true}
+                selectTextOnFocus={false}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
+                onPress={() => {
+                  setShowPassword(!showPassword);
+                  // Maintain focus after toggling visibility
+                  setTimeout(() => {
+                    passwordInputRef.current?.focus();
+                  }, 100);
+                }}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons 
                   name={showPassword ? "eye-off" : "eye"} 
@@ -179,6 +235,7 @@ export default function RegisterScreen() {
             <View style={[styles.inputContainer, shadows.sm]}>
               <Ionicons name="lock-closed" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
+                ref={confirmPasswordInputRef}
                 style={styles.input}
                 placeholder="Confirm Password"
                 placeholderTextColor={colors.gray500}
@@ -187,10 +244,28 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="default"
+                returnKeyType="done"
+                enablesReturnKeyAutomatically={true}
+                blurOnSubmit={false}
+                importantForAutofill="no"
+                textContentType="none"
+                autoComplete="off"
+                clearButtonMode="never"
+                editable={true}
+                selectTextOnFocus={false}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                onPress={() => {
+                  setShowConfirmPassword(!showConfirmPassword);
+                  // Maintain focus after toggling visibility
+                  setTimeout(() => {
+                    confirmPasswordInputRef.current?.focus();
+                  }, 100);
+                }}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons 
                   name={showConfirmPassword ? "eye-off" : "eye"} 
@@ -229,7 +304,10 @@ export default function RegisterScreen() {
 
             <GradientButton
               title={isLoading ? 'Creating Account...' : 'Create Account'}
-              onPress={handleRegister}
+              onPress={() => {
+                console.log('[RegisterScreen] Button pressed!');
+                handleRegister();
+              }}
               section="auth"
               size="large"
               disabled={isLoading}
@@ -284,7 +362,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   title: {
-    ...typography.h1,
+    ...typography.h3,
+    fontWeight: '700',
     color: colors.gray900,
     marginBottom: spacing.sm,
   },
@@ -304,6 +383,12 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    minHeight: 56,
+    overflow: 'visible',
+    ...(Platform.OS === 'ios' && {
+      zIndex: 0,
+    }),
   },
   inputIcon: {
     marginRight: spacing.md,
@@ -311,11 +396,21 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: spacing.md,
+    paddingRight: spacing.sm,
     ...typography.body,
     color: colors.gray900,
+    minHeight: 20,
+    ...(Platform.OS === 'ios' && {
+      fontSize: 16, // Prevent zoom on iOS
+    }),
   },
   eyeIcon: {
     padding: spacing.xs,
+    marginLeft: spacing.xs,
+    zIndex: 1,
+    ...(Platform.OS === 'ios' && {
+      pointerEvents: 'box-only',
+    }),
   },
   row: {
     flexDirection: 'row',

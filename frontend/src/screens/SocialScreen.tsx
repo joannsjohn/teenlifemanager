@@ -7,7 +7,9 @@ import {
   FlatList,
   TextInput,
   Image,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SocialConnection, SocialActivity } from '../types';
@@ -185,9 +187,10 @@ export default function SocialScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Social</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>Social</Text>
         <TouchableOpacity style={styles.searchButton}>
           <Ionicons name="search" size={24} color="#6366f1" />
         </TouchableOpacity>
@@ -294,7 +297,7 @@ export default function SocialScreen() {
       <TouchableOpacity style={styles.addButton}>
         <Ionicons name="add" size={24} color="#fff" />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -307,16 +310,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    ...typography.h3,
+    fontWeight: '600',
+    color: colors.gray900,
+    flex: 1,
   },
   searchButton: {
     padding: 8,

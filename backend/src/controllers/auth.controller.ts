@@ -9,24 +9,29 @@ export class AuthController {
    * POST /api/auth/register
    */
   static async register(req: Request, res: Response): Promise<void> {
-    const data: RegisterDto = req.body;
+    try {
+      const data: RegisterDto = req.body;
 
-    // Validate required fields
-    if (!data.email || !data.password || !data.displayName) {
-      res.status(400).json({
-        success: false,
-        error: 'Email, password, and display name are required',
+      // Validate required fields
+      if (!data.email || !data.password || !data.displayName) {
+        res.status(400).json({
+          success: false,
+          error: 'Email, password, and display name are required',
+        } as ApiResponse);
+        return;
+      }
+
+      const result = await AuthService.register(data);
+
+      res.status(201).json({
+        success: true,
+        data: result,
+        message: 'User registered successfully',
       } as ApiResponse);
-      return;
+    } catch (error: any) {
+      // Error will be caught by error handler middleware
+      throw error;
     }
-
-    const result = await AuthService.register(data);
-
-    res.status(201).json({
-      success: true,
-      data: result,
-      message: 'User registered successfully',
-    } as ApiResponse);
   }
 
   /**
@@ -34,24 +39,29 @@ export class AuthController {
    * POST /api/auth/login
    */
   static async login(req: Request, res: Response): Promise<void> {
-    const data: LoginDto = req.body;
+    try {
+      const data: LoginDto = req.body;
 
-    // Validate required fields
-    if (!data.email || !data.password) {
-      res.status(400).json({
-        success: false,
-        error: 'Email and password are required',
+      // Validate required fields
+      if (!data.email || !data.password) {
+        res.status(400).json({
+          success: false,
+          error: 'Email and password are required',
+        } as ApiResponse);
+        return;
+      }
+
+      const result = await AuthService.login(data);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Login successful',
       } as ApiResponse);
-      return;
+    } catch (error: any) {
+      // Error will be caught by error handler middleware
+      throw error;
     }
-
-    const result = await AuthService.login(data);
-
-    res.json({
-      success: true,
-      data: result,
-      message: 'Login successful',
-    } as ApiResponse);
   }
 
   /**

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, Animated } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationService } from '../../services/notificationService';
 import { colors, typography, spacing, borderRadius } from '../../theme';
@@ -36,17 +36,18 @@ export default function NotificationBell({ onPress, size = 24 }: NotificationBel
   useEffect(() => {
     if (unreadCount > 0) {
       // Pulse animation when there are unread notifications
+      const canUseNativeDriver = Platform.OS !== 'web';
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
             toValue: 1.2,
             duration: 500,
-            useNativeDriver: true,
+            useNativeDriver: canUseNativeDriver,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
             duration: 500,
-            useNativeDriver: true,
+            useNativeDriver: canUseNativeDriver,
           }),
         ])
       ).start();

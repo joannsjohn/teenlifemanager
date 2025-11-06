@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
@@ -83,8 +85,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
         <View style={styles.profileImageContainer}>
           <Image
             source={{ uri: user.profileImage || 'https://via.placeholder.com/100' }}
@@ -184,7 +188,8 @@ export default function ProfileScreen() {
       <View style={styles.footer}>
         <Text style={styles.footerText}>Teen Life Manager v1.0.0</Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -192,6 +197,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     alignItems: 'center',

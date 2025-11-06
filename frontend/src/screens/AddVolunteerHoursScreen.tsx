@@ -159,7 +159,7 @@ export default function AddVolunteerHoursScreen({ route }: any) {
             >
               <Ionicons name="arrow-back" size={24} color={colors.volunteering.primary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Log Hours</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>Log Hours</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
     marginBottom: spacing.lg,
     minHeight: 44,
   },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   headerTitle: {
-    ...typography.h4,
+    ...typography.h3,
     color: colors.gray900,
     flex: 1,
     textAlign: 'center',

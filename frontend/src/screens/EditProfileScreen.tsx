@@ -135,7 +135,7 @@ export default function EditProfileScreen() {
               >
                 <Ionicons name="arrow-back" size={24} color={colors.profile.primary} />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Edit Profile</Text>
+              <Text style={styles.headerTitle} numberOfLines={1}>Edit Profile</Text>
               <View style={styles.placeholder} />
             </View>
 
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
     minHeight: 44, // Minimum touch target height
   },
   backButton: {

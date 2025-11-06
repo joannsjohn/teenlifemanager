@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, StyleSheet, ViewStyle } from 'react-native';
+import { Animated, View, StyleSheet, ViewStyle, Platform } from 'react-native';
 
 interface AnimatedContainerProps {
   children: React.ReactNode;
@@ -22,6 +22,7 @@ export default function AnimatedContainer({
 
   useEffect(() => {
     const animations: Animated.CompositeAnimation[] = [];
+    const canUseNativeDriver = Platform.OS !== 'web';
 
     if (animationType === 'fade' || animationType === 'scale') {
       animations.push(
@@ -29,7 +30,7 @@ export default function AnimatedContainer({
           toValue: 1,
           duration,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: canUseNativeDriver,
         })
       );
     }
@@ -40,7 +41,7 @@ export default function AnimatedContainer({
           toValue: 0,
           duration,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: canUseNativeDriver,
         })
       );
       animations.push(
@@ -48,7 +49,7 @@ export default function AnimatedContainer({
           toValue: 1,
           duration,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: canUseNativeDriver,
         })
       );
     }
@@ -60,7 +61,7 @@ export default function AnimatedContainer({
           tension: 50,
           friction: 7,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: canUseNativeDriver,
         })
       );
     }

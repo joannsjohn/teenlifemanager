@@ -125,7 +125,7 @@ export default function SettingsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color={colors.profile.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>Settings</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.section}>
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
     minHeight: 44,
   },

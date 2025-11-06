@@ -5,7 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -117,9 +119,10 @@ export default function ScheduleScreen() {
   const todayEvents = getEventsForDate(selectedDate);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>📅 My Schedule</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>📅 My Schedule</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.viewButton, viewMode === 'calendar' && styles.activeViewButton]}
@@ -209,7 +212,7 @@ export default function ScheduleScreen() {
           <Ionicons name="add" size={28} color={colors.white} />
         </LinearGradient>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -223,12 +226,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     backgroundColor: colors.white,
   },
   headerTitle: {
     ...typography.h3,
+    fontWeight: '600',
     color: colors.gray900,
+    flex: 1,
   },
   headerActions: {
     flexDirection: 'row',
@@ -252,12 +258,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    padding: spacing.lg,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   selectedDateContainer: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    padding: spacing.lg,
   },
   selectedDateTitle: {
     ...typography.h4,
@@ -278,17 +286,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eventsContent: {
-    padding: spacing.lg,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   eventCard: {
-    marginBottom: spacing.md,
-    padding: 0,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   eventTitleContainer: {
     flexDirection: 'row',
@@ -312,7 +321,7 @@ const styles = StyleSheet.create({
   eventDescription: {
     ...typography.bodySmall,
     color: colors.gray600,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   eventTimeContainer: {
     flexDirection: 'row',

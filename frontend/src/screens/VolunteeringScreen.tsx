@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   RefreshControl,
   Animated,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '../navigation/SimpleNavigation';
 import { VolunteeringRecord, Organization } from '../types';
@@ -19,17 +21,23 @@ import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { volunteerService } from '../services/volunteerService';
 import { organizationService } from '../services/organizationService';
 import { fadeIn } from '../utils/animations';
+import { useAuthStore } from '../store/authStore';
+import { calculatePVSAEligibility, getPVSALevelName, getPVSALevelColor } from '../utils/pvsa';
+import PVSAGauge from '../components/common/PVSAGauge';
 
 export default function VolunteeringScreen() {
   const navigation = useNavigation();
+  const { user } = useAuthStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [activeTab, setActiveTab] = useState<'records' | 'organizations'>('records');
+  const [activeTab, setActiveTab] = useState<'records' | 'organizations' | 'calendar'>('records');
   const [records, setRecords] = useState<VolunteeringRecord[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [totalHours, setTotalHours] = useState(0);
+  const [approvedHours, setApprovedHours] = useState(0);
   const [pendingHours, setPendingHours] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     fadeIn(fadeAnim, 300).start();
@@ -53,6 +61,12 @@ export default function VolunteeringScreen() {
         .filter(record => record.status === 'pending')
         .reduce((sum, record) => sum + record.hours, 0);
       setPendingHours(pending);
+      
+      // Calculate approved hours for PVSA (only approved hours count)
+      const approved = hoursData
+        .filter(record => record.status === 'approved')
+        .reduce((sum, record) => sum + record.hours, 0);
+      setApprovedHours(approved);
     } catch (error) {
       // Silently fail - network errors are expected when backend is not available
       // Only log in development mode
@@ -90,6 +104,53 @@ export default function VolunteeringScreen() {
   const handleRecordPress = (record: VolunteeringRecord) => {
     navigation.navigate('VolunteerHourDetails' as any, { recordId: record.id });
   };
+
+  // Calculate PVSA eligibility (only approved hours count)
+  const pvsaEligibility = useMemo(() => {
+    return calculatePVSAEligibility(approvedHours, user?.age);
+  }, [approvedHours, user?.age]);
+
+  // Prepare calendar marked dates
+  const markedDates = useMemo(() => {
+    const marked: any = {};
+    records.forEach(record => {
+      const dateStr = record.startTime.toISOString().split('T')[0];
+      if (!marked[dateStr]) {
+        marked[dateStr] = {
+          marked: true,
+          dotColor: colors.volunteering.primary,
+          selected: dateStr === selectedDate,
+          selectedColor: colors.volunteering.primary,
+        };
+      } else {
+        // If multiple records on same date, show as selected when clicked
+        if (dateStr === selectedDate) {
+          marked[dateStr].selected = true;
+          marked[dateStr].selectedColor = colors.volunteering.primary;
+        }
+      }
+    });
+    // Mark selected date
+    if (selectedDate && !marked[selectedDate]) {
+      marked[selectedDate] = {
+        selected: true,
+        selectedColor: colors.volunteering.primary,
+      };
+    }
+    return marked;
+  }, [records, selectedDate]);
+
+  // Get events for selected date
+  const getEventsForDate = (date: string) => {
+    return records.filter(record => {
+      const recordDate = record.startTime.toISOString().split('T')[0];
+      return recordDate === date;
+    });
+  };
+
+  const selectedDateEvents = useMemo(() => {
+    return getEventsForDate(selectedDate);
+  }, [selectedDate, records]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -206,23 +267,57 @@ export default function VolunteeringScreen() {
         style={StyleSheet.absoluteFill}
       />
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        {/* Stats */}
-        <View style={styles.statsContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle} numberOfLines={1}>Volunteering</Text>
+        </View>
+        
+        {/* Stats - First Row */}
+        <View style={styles.statsRow}>
           <GradientCard section="volunteering" variant="gradient" style={styles.statCard}>
-            <Text style={styles.statNumber}>{totalHours.toFixed(1)}</Text>
-            <Text style={styles.statLabel}>Total Hours</Text>
+            <Text style={styles.statNumber}>{approvedHours.toFixed(1)}</Text>
+            <Text style={styles.statLabel}>Approved Hours</Text>
           </GradientCard>
           <GradientCard section="volunteering" variant="elevated" style={styles.statCard}>
             <Text style={[styles.statNumber, { color: colors.volunteering.primary }]}>
               {pendingHours.toFixed(1)}
             </Text>
-            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={[styles.statLabel, { color: colors.gray700 }]}>Total Pending Hours</Text>
           </GradientCard>
           <GradientCard section="volunteering" variant="elevated" style={styles.statCard}>
             <Text style={[styles.statNumber, { color: colors.volunteering.primary }]}>
               {records.length}
             </Text>
-            <Text style={styles.statLabel}>Records</Text>
+            <Text style={[styles.statLabel, { color: colors.gray700 }]}>Total Records</Text>
+          </GradientCard>
+        </View>
+
+        {/* PVSA Gauge Charts */}
+        <View style={styles.pvsaContainer}>
+          <GradientCard section="volunteering" variant="elevated" style={styles.pvsaCardContainer}>
+            <View style={styles.pvsaGaugesRow}>
+              <PVSAGauge
+                level="bronze"
+                currentHours={approvedHours}
+                threshold={pvsaEligibility.bronzeThreshold}
+                isAchieved={pvsaEligibility.currentLevel !== 'none' && (pvsaEligibility.currentLevel === 'bronze' || pvsaEligibility.currentLevel === 'silver' || pvsaEligibility.currentLevel === 'gold')}
+                progress={approvedHours >= pvsaEligibility.bronzeThreshold ? 100 : (approvedHours / pvsaEligibility.bronzeThreshold) * 100}
+              />
+              <PVSAGauge
+                level="silver"
+                currentHours={approvedHours}
+                threshold={pvsaEligibility.silverThreshold}
+                isAchieved={pvsaEligibility.currentLevel === 'silver' || pvsaEligibility.currentLevel === 'gold'}
+                progress={approvedHours >= pvsaEligibility.silverThreshold ? 100 : approvedHours >= pvsaEligibility.bronzeThreshold ? ((approvedHours - pvsaEligibility.bronzeThreshold) / (pvsaEligibility.silverThreshold - pvsaEligibility.bronzeThreshold)) * 100 : 0}
+              />
+              <PVSAGauge
+                level="gold"
+                currentHours={approvedHours}
+                threshold={pvsaEligibility.goldThreshold}
+                isAchieved={pvsaEligibility.currentLevel === 'gold'}
+                progress={approvedHours >= pvsaEligibility.goldThreshold ? 100 : approvedHours >= pvsaEligibility.silverThreshold ? ((approvedHours - pvsaEligibility.silverThreshold) / (pvsaEligibility.goldThreshold - pvsaEligibility.silverThreshold)) * 100 : 0}
+              />
+            </View>
           </GradientCard>
         </View>
 
@@ -244,6 +339,15 @@ export default function VolunteeringScreen() {
           >
             <Text style={[styles.tabText, activeTab === 'organizations' && styles.activeTabText]}>
               🏢 Organizations
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
+            onPress={() => setActiveTab('calendar')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
+              📅 Calendar
             </Text>
           </TouchableOpacity>
         </View>
@@ -285,6 +389,66 @@ export default function VolunteeringScreen() {
               ListEmptyComponent={!isLoading ? renderEmptyState('organizations') : null}
             />
           )}
+
+          {activeTab === 'calendar' && (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={isRefreshing} 
+                  onRefresh={handleRefresh}
+                  tintColor={colors.volunteering.primary}
+                />
+              }
+            >
+              <View style={styles.calendarContainer}>
+                <GradientCard section="volunteering" variant="elevated" style={styles.calendarCard}>
+                  <Calendar
+                    onDayPress={(day) => setSelectedDate(day.dateString)}
+                    markedDates={markedDates}
+                    theme={{
+                      selectedDayBackgroundColor: colors.volunteering.primary,
+                      selectedDayTextColor: colors.white,
+                      todayTextColor: colors.volunteering.primary,
+                      arrowColor: colors.volunteering.primary,
+                      textDayFontWeight: '600',
+                      textMonthFontWeight: '700',
+                      textDayFontSize: 14,
+                      textMonthFontSize: 16,
+                    }}
+                    style={styles.calendar}
+                  />
+                </GradientCard>
+
+                {selectedDateEvents.length > 0 && (
+                  <View style={styles.selectedDateContainer}>
+                    <Text style={styles.selectedDateTitle}>
+                      {new Date(selectedDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </Text>
+                    <FlatList
+                      data={selectedDateEvents}
+                      keyExtractor={(item) => item.id}
+                      renderItem={renderRecord}
+                      showsVerticalScrollIndicator={false}
+                      scrollEnabled={false}
+                    />
+                  </View>
+                )}
+
+                {selectedDateEvents.length === 0 && !isLoading && (
+                  <View style={styles.noEventsContainer}>
+                    <Ionicons name="calendar-outline" size={48} color={colors.gray400} />
+                    <Text style={styles.noEventsText}>No volunteer activities on this date</Text>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          )}
         </View>
       </Animated.View>
 
@@ -325,6 +489,30 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    marginBottom: spacing.md,
+  },
+  headerTitle: {
+    ...typography.h3,
+    fontWeight: '600',
+    color: colors.gray900,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    padding: spacing.lg,
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  statsScrollContainer: {
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingRight: spacing.xl,
+  },
   statsContainer: {
     flexDirection: 'row',
     padding: spacing.lg,
@@ -333,6 +521,19 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     padding: spacing.md,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  pvsaContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  pvsaCardContainer: {
+    padding: spacing.lg,
+  },
+  pvsaGaugesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
   statNumber: {
@@ -344,6 +545,55 @@ const styles = StyleSheet.create({
   statLabel: {
     ...typography.labelSmall,
     color: colors.white,
+    textAlign: 'center',
+  },
+  pvsaCard: {
+    minWidth: 140,
+  },
+  pvsaBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  pvsaProgress: {
+    ...typography.labelSmall,
+    color: colors.gray600,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    fontSize: 10,
+  },
+  calendarContainer: {
+    padding: spacing.lg,
+  },
+  calendarCard: {
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  calendar: {
+    borderRadius: borderRadius.lg,
+  },
+  selectedDateContainer: {
+    marginTop: spacing.md,
+  },
+  selectedDateTitle: {
+    ...typography.h4,
+    color: colors.gray900,
+    marginBottom: spacing.md,
+    fontWeight: '600',
+  },
+  noEventsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+  },
+  noEventsText: {
+    ...typography.body,
+    color: colors.gray600,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   tabContainer: {

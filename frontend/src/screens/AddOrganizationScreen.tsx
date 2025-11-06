@@ -92,7 +92,7 @@ export default function AddOrganizationScreen() {
             >
               <Ionicons name="arrow-back" size={24} color={colors.volunteering.primary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Organization</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>Add Organization</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
     minHeight: 44,
   },

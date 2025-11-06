@@ -154,6 +154,8 @@ Opens a web interface at `http://localhost:5555` where you can:
 
 ### Creating Migrations
 
+**Important**: Always use migrations instead of `prisma db push` to preserve your data!
+
 ```bash
 npm run prisma:migrate
 ```
@@ -162,6 +164,8 @@ This will:
 1. Create a migration file
 2. Apply it to your database
 3. Update Prisma Client types
+
+**⚠️ Never use `prisma db push --force-reset`** - it will delete all your data!
 
 ### Resetting Database (Development Only!)
 

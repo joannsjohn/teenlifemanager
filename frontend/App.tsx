@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationProvider, useNavigation } from './src/navigation/SimpleNavigation';
 
 import TestScreen from './src/screens/TestScreen';
@@ -60,10 +61,12 @@ const ScreenRenderer: React.FC = () => {
 
 export default function App() {
   return (
-    <NavigationProvider initialScreen="Login">
-      <View style={{ flex: 1 }}>
-        <ScreenRenderer />
-      </View>
-    </NavigationProvider>
+    <SafeAreaProvider>
+      <NavigationProvider initialScreen="Login">
+        <View style={{ flex: 1 }}>
+          <ScreenRenderer />
+        </View>
+      </NavigationProvider>
+    </SafeAreaProvider>
   );
 }

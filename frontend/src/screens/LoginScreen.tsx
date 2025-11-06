@@ -17,6 +17,7 @@ import { useNavigation } from '../navigation/SimpleNavigation';
 import GradientButton from '../components/common/GradientButton';
 import { gradients, typography, spacing, borderRadius, shadows, colors } from '../theme';
 import { fadeIn } from '../utils/animations';
+import { authService } from '../services/authService';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -40,15 +41,23 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      // Mock user data
-      const mockUser = {
-        id: '1',
-        name: 'John Doe',
-        email: email,
-        age: 16,
-        grade: '11th Grade',
+    try {
+      // Call backend API
+      const response = await authService.login({
+        email,
+        password,
+      });
+
+      // Map backend user to frontend User type
+      // Note: Backend doesn't return age/grade, so we use defaults
+      // These should be stored in user preferences or profile
+      const user = {
+        id: response.user.id || '',
+        name: response.user.displayName || response.user.nickname || 'User',
+        email: response.user.email || email,
+        age: 16, // Default - should be fetched from user profile
+        grade: '11th Grade', // Default - should be fetched from user profile
+        profileImage: response.user.avatar || '',
         preferences: {
           theme: 'light' as const,
           notifications: {
@@ -63,14 +72,31 @@ export default function LoginScreen() {
             shareMood: false,
           },
         },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: response.user.createdAt ? new Date(response.user.createdAt) : new Date(),
+        updatedAt: response.user.updatedAt ? new Date(response.user.updatedAt) : new Date(),
       };
       
-      login(mockUser);
+      // Validate user object before login
+      if (!user.id || !user.email) {
+        throw new Error('Invalid user data received from server');
+      }
+      
+      // Login with the user and token
+      login(user, response.accessToken);
       setIsLoading(false);
-      navigation.navigate('Main');
-    }, 1000);
+      
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigation.navigate('Main');
+      }, 100);
+    } catch (error: any) {
+      setIsLoading(false);
+      const errorMessage = error.message || 'Failed to login. Please check your credentials.';
+      Alert.alert('Login Failed', errorMessage);
+      if (__DEV__) {
+        console.error('Login error:', error);
+      }
+    }
   };
 
   return (

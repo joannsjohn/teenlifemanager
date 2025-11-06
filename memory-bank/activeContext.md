@@ -188,7 +188,7 @@ src/components/
 3. **Data Persistence**: PostgreSQL via Prisma
    - Organization model with full CRUD
    - VolunteerHour model linked to Organization
-   - Automatic schema migrations with `prisma db push`
+   - Database migrations with `prisma migrate dev` (preserves data)
 
 4. **Error Handling**: Graceful degradation
    - Services handle network errors gracefully

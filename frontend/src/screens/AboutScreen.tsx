@@ -44,7 +44,7 @@ export default function AboutScreen() {
           >
             <Ionicons name="arrow-back" size={24} color={colors.profile.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>About</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>About</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
     minHeight: 44,
   },

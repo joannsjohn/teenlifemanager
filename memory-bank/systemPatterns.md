@@ -136,7 +136,7 @@ type MainTabParamList = {
 
 **Backend Schema** (Prisma):
 - User, Organization, VolunteerHour, Notification, Event, MoodEntry, JournalEntry, Friendship models
-- Automatic migrations with `prisma db push`
+- Database migrations with `prisma migrate dev` (preserves data)
 - Type-safe database client generated
 
 **Frontend Pattern**:

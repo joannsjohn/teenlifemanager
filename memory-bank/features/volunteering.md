@@ -219,7 +219,7 @@ November 2025
 
 ## Testing Notes
 - Backend must be running for full functionality
-- Database migration required: `npx prisma db push`
+- Database migration required: `npm run prisma:migrate` (⚠️ Never use `prisma db push --force-reset` - it deletes all data!)
 - Prisma client generation required: `npx prisma generate`
 - App gracefully handles backend unavailability
 - Network errors don't crash the app

@@ -40,16 +40,19 @@ export default function GradientButton({
   style,
   textStyle,
 }: GradientButtonProps) {
+  if (__DEV__ && title === 'Create Account') {
+    console.log('[GradientButton] Rendering Create Account button', { disabled, loading, hasOnPress: !!onPress });
+  }
   const gradientColors = getGradientColors(section);
   
   const getSizeStyles = () => {
     switch (size) {
       case 'small':
-        return { paddingVertical: 10, paddingHorizontal: 16, fontSize: 14 };
+        return { paddingVertical: 12, paddingHorizontal: 20, fontSize: 14, minHeight: 44 };
       case 'large':
-        return { paddingVertical: 18, paddingHorizontal: 32, fontSize: 18 };
+        return { paddingVertical: 18, paddingHorizontal: 32, fontSize: 18, minHeight: 56 };
       default:
-        return { paddingVertical: 14, paddingHorizontal: 24, fontSize: 16 };
+        return { paddingVertical: 16, paddingHorizontal: 24, fontSize: 16, minHeight: 50 };
     }
   };
 
@@ -62,7 +65,11 @@ export default function GradientButton({
           styles.button,
           styles.outlineButton,
           { borderColor: gradientColors[0] },
-          { paddingVertical: sizeStyles.paddingVertical, paddingHorizontal: sizeStyles.paddingHorizontal },
+          { 
+            paddingVertical: sizeStyles.paddingVertical, 
+            paddingHorizontal: sizeStyles.paddingHorizontal,
+            minHeight: sizeStyles.minHeight,
+          },
           style,
           (disabled || loading) && styles.disabled,
         ]}
@@ -90,11 +97,22 @@ export default function GradientButton({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => {
+        if (__DEV__) {
+          console.log('[GradientButton] TouchableOpacity onPress called', { disabled, loading, title });
+        }
+        if (!disabled && !loading && onPress) {
+          onPress();
+        }
+      }}
       disabled={disabled || loading}
       activeOpacity={0.8}
       style={[
-        { paddingVertical: sizeStyles.paddingVertical, paddingHorizontal: sizeStyles.paddingHorizontal },
+        { 
+          paddingVertical: sizeStyles.paddingVertical, 
+          paddingHorizontal: sizeStyles.paddingHorizontal,
+          minHeight: sizeStyles.minHeight,
+        },
         style,
         (disabled || loading) && styles.disabled,
       ]}
@@ -103,10 +121,11 @@ export default function GradientButton({
         colors={disabled || loading ? [colors.gray400, colors.gray500] : gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={[styles.button, styles.gradientButton, shadows.md]}
+        style={[styles.button, styles.gradientButton, { minHeight: sizeStyles.minHeight }, shadows.md]}
+        pointerEvents="none"
       >
         {loading ? (
-          <ActivityIndicator color={colors.white} size="small" />
+          <ActivityIndicator color={colors.white} size="small" pointerEvents="none" />
         ) : (
           <Text
             style={[
@@ -114,6 +133,7 @@ export default function GradientButton({
               { fontSize: sizeStyles.fontSize },
               textStyle,
             ]}
+            pointerEvents="none"
           >
             {title}
           </Text>

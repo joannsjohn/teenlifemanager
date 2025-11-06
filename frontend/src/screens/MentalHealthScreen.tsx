@@ -7,7 +7,9 @@ import {
   FlatList,
   TextInput,
   Modal,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MoodEntry, MentalHealthResource, Achievement } from '../types';
@@ -281,9 +283,10 @@ export default function MentalHealthScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mental Health</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>Mental Health</Text>
         <TouchableOpacity style={styles.helpButton}>
           <Ionicons name="help-circle" size={24} color="#6366f1" />
         </TouchableOpacity>
@@ -421,7 +424,7 @@ export default function MentalHealthScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -434,16 +437,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    ...typography.h3,
+    fontWeight: '600',
+    color: colors.gray900,
+    flex: 1,
   },
   helpButton: {
     padding: 8,

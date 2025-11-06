@@ -1,11 +1,14 @@
-import { Animated } from 'react-native';
+import { Animated, Platform } from 'react-native';
+
+// Native driver is only supported on iOS and Android, not on web
+const canUseNativeDriver = Platform.OS !== 'web';
 
 // Fade in animation
 export const fadeIn = (value: Animated.Value, duration: number = 250) => {
   return Animated.timing(value, {
     toValue: 1,
     duration,
-    useNativeDriver: true,
+    useNativeDriver: canUseNativeDriver,
   });
 };
 
@@ -14,7 +17,7 @@ export const fadeOut = (value: Animated.Value, duration: number = 250) => {
   return Animated.timing(value, {
     toValue: 0,
     duration,
-    useNativeDriver: true,
+    useNativeDriver: canUseNativeDriver,
   });
 };
 
@@ -23,7 +26,7 @@ export const slideInUp = (value: Animated.Value, duration: number = 300) => {
   return Animated.timing(value, {
     toValue: 0,
     duration,
-    useNativeDriver: true,
+    useNativeDriver: canUseNativeDriver,
   });
 };
 
@@ -32,7 +35,7 @@ export const slideInRight = (translateX: Animated.Value, duration: number = 300)
   return Animated.timing(translateX, {
     toValue: 0,
     duration,
-    useNativeDriver: true,
+    useNativeDriver: canUseNativeDriver,
   });
 };
 
@@ -42,7 +45,7 @@ export const scaleIn = (value: Animated.Value, duration: number = 250) => {
     toValue: 1,
     tension: 50,
     friction: 7,
-    useNativeDriver: true,
+    useNativeDriver: canUseNativeDriver,
   });
 };
 
@@ -58,7 +61,7 @@ export const staggerAnimation = (
         toValue: 1,
         duration,
         delay: index * delay,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       })
     )
   );
@@ -78,12 +81,12 @@ export const pulse = (value: Animated.Value) => {
       Animated.timing(value, {
         toValue: 1.1,
         duration: 500,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       }),
       Animated.timing(value, {
         toValue: 1,
         duration: 500,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       }),
     ])
   );

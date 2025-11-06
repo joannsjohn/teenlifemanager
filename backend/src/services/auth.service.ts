@@ -10,17 +10,28 @@ export class AuthService {
    * Register a new user
    */
   static async register(data: RegisterDto): Promise<AuthResponse> {
+    if (env.nodeEnv !== 'production') {
+      console.log(`[AuthService] Register attempt for: ${data.email.toLowerCase()}`);
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email.toLowerCase() },
     });
 
     if (existingUser) {
+      if (env.nodeEnv !== 'production') {
+        console.log(`[AuthService] User already exists: ${data.email.toLowerCase()}`);
+      }
       throw new ValidationError('Email already registered');
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(data.password, 10);
+
+    if (env.nodeEnv !== 'production') {
+      console.log(`[AuthService] Creating user: ${data.email.toLowerCase()}`);
+    }
 
     // Create user
     const user = await prisma.user.create({
@@ -43,6 +54,10 @@ export class AuthService {
       },
     });
 
+    if (env.nodeEnv !== 'production') {
+      console.log(`[AuthService] User created successfully: ${user.id}`);
+    }
+
     // Generate tokens
     const tokens = this.generateTokens(user.id, user.email);
 
@@ -61,12 +76,30 @@ export class AuthService {
       where: { email: data.email.toLowerCase() },
     });
 
-    if (!user || !user.passwordHash) {
+    if (!user) {
+      if (env.nodeEnv !== 'production') {
+        console.log(`[AuthService] Login attempt for non-existent user: ${data.email.toLowerCase()}`);
+      }
       throw new AuthenticationError('Invalid email or password');
+    }
+
+    if (env.nodeEnv !== 'production') {
+      console.log(`[AuthService] User found: ${user.email}, has passwordHash: ${!!user.passwordHash}, isMock: ${user.passwordHash === 'mock'}`);
+    }
+
+    // Check if user has a valid password hash (not a mock user)
+    if (!user.passwordHash || user.passwordHash === 'mock') {
+      if (env.nodeEnv !== 'production') {
+        console.log(`[AuthService] User has invalid/mock password hash`);
+      }
+      throw new AuthenticationError('This account was created with a test token. Please register a new account with a password.');
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(data.password, user.passwordHash);
+    if (env.nodeEnv !== 'production') {
+      console.log(`[AuthService] Password verification result: ${isValidPassword}`);
+    }
     if (!isValidPassword) {
       throw new AuthenticationError('Invalid email or password');
     }
