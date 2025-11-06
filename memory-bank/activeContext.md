@@ -1,11 +1,21 @@
 # Active Context
 
 ## Current Status
-**Phase**: Early Development - Foundation & Structure Setup
-**Date**: October 2025
-**Focus**: Monorepo reorganization and backend setup
+**Phase**: Core Feature Development - Volunteering Feature Complete
+**Date**: November 2025
+**Focus**: Volunteering feature with Organizations management
 
 ### Recent Changes
+- ✅ **Volunteering Feature Complete**: Full implementation with Organizations
+  - Backend: Organization model, API endpoints, database migration
+  - Frontend: 5 new screens, interconnected functionality, modern UI
+  - Services: organizationService and volunteerService for API communication
+  - Navigation: Updated to support route parameters
+- ✅ **UI Theme Consistency**: All Profile-related screens use consistent theme
+  - Light gradient backgrounds (#F8FAFC → #EDE9FE → #F3E8FF)
+  - Smaller h3/h4 titles that don't truncate
+  - White back buttons with colored icons
+- ✅ **Error Handling**: Graceful degradation when backend is unavailable
 - ✅ **Monorepo Structure**: Reorganized into `frontend/` and `backend/` folders
 - ✅ **Root Workspace**: Created root package.json for workspace management
 - ✅ **CI/CD Setup**: Created GitHub Actions workflows for frontend and backend
@@ -13,20 +23,37 @@
 
 ## What We're Working On
 
-### Immediate Focus
-1. **Memory Bank Creation** ✓ (Current task)
-   - Setting up comprehensive documentation structure
-   - Establishing project memory for future development sessions
-   - Documenting current architecture and decisions
-
 ### Recently Completed
-- Project initialization with Expo and TypeScript
-- Basic project structure created (screens, components, navigation)
-- Navigation architecture established (Tab Navigator)
-- Initial screen placeholders created for all main features
-- Authentication store setup with Zustand
-- README documentation with comprehensive feature overview
-- Basic login UI in App.tsx (not yet integrated with navigation)
+- ✅ **Volunteering Feature - Full Stack Implementation**
+  - Created Organization model in Prisma schema with full CRUD
+  - Built backend API endpoints (`/api/organizations`, `/api/volunteer`)
+  - Updated VolunteerHour model to link to Organization via `organizationId`
+  - Created frontend services (organizationService.ts, volunteerService.ts)
+  - Redesigned VolunteeringScreen with modern UI matching profile theme
+  - Created 5 interconnected screens:
+    - AddOrganizationScreen - Create organizations with categories, contact info
+    - EditOrganizationScreen - Edit existing organizations
+    - OrganizationDetailsScreen - View details with "Add Hours" button
+    - AddVolunteerHoursScreen - Log hours with organization picker modal
+    - VolunteerHourDetailsScreen - View individual hour records
+  - Implemented interconnected workflow:
+    - Add hours directly from organizations screen
+    - Add organizations from hours screen
+    - Organization picker modal in hours form
+  - Added graceful error handling for network failures
+  - Updated navigation system to support route parameters
+  - Implemented pull-to-refresh and empty states
+  - Database migration completed (Organization table created)
+
+- ✅ **Profile Screen Navigation**: All buttons navigate to respective screens
+  - Created placeholder screens: PrivacyScreen, HelpScreen, AboutScreen
+  - Updated navigation types and App.tsx
+  - Consistent theme across all profile screens
+
+- ✅ **Notifications System**: Improved UI and error handling
+  - Updated NotificationsScreen with modern design
+  - Graceful error handling when backend unavailable
+  - Better empty states and loading indicators
 
 ## Current Codebase State
 
@@ -39,15 +66,51 @@
   - Primary color: #6366f1 (Indigo)
   - Platform-aware tab bar sizing
 
+#### Volunteering Screens (Fully Implemented)
+- **VolunteeringScreen.tsx**: Main volunteering screen
+  - Modern UI matching profile theme
+  - Stats dashboard (total hours, pending, records)
+  - Tab navigation (Records / Organizations)
+  - Floating action buttons
+  - Empty states with helpful messages
+  - Pull-to-refresh functionality
+- **AddOrganizationScreen.tsx**: Create organizations
+  - Full form with categories, contact info, website, address
+  - Category management (add/remove)
+  - Validation and error handling
+- **EditOrganizationScreen.tsx**: Edit existing organizations
+  - Pre-populated form
+  - Category management
+- **OrganizationDetailsScreen.tsx**: View organization details
+  - Shows all organization information
+  - "Add Hours" button for quick access
+  - Edit and Delete actions
+  - Contact information with clickable links
+- **AddVolunteerHoursScreen.tsx**: Log volunteer hours
+  - Organization picker modal
+  - "Add New Organization" button
+  - Full form with description, hours, date, location, supervisor info
+  - Pre-fills organization when navigated from organization screen
+- **VolunteerHourDetailsScreen.tsx**: View hour record details
+  - Shows all record information
+  - Status badges
+  - Delete functionality
+
+#### Profile Screens (Fully Implemented)
+- **ProfileScreen.tsx**: Main profile with navigation to all sub-screens
+- **EditProfileScreen.tsx**: Edit user profile information
+- **NotificationsScreen.tsx**: View and manage notifications
+- **SettingsScreen.tsx**: App settings and preferences
+- **PrivacyScreen.tsx**: Privacy and security settings
+- **HelpScreen.tsx**: Help and support resources
+- **AboutScreen.tsx**: App information and version
+
 #### Screens (Placeholder Stage)
 - **LoginScreen.tsx**: Login interface (placeholder)
 - **RegisterScreen.tsx**: Registration interface (placeholder)
 - **ScheduleScreen.tsx**: Calendar and task management (placeholder)
-- **VolunteeringScreen.tsx**: Volunteer tracking (placeholder)
 - **SocialScreen.tsx**: Social features (placeholder)
 - **MentalHealthScreen.tsx**: Wellness features (placeholder)
-- **ProfileScreen.tsx**: User profile (placeholder)
-- **SettingsScreen.tsx**: App settings (placeholder)
 
 #### State Management
 - **authStore.ts**: Zustand store for authentication
@@ -55,20 +118,44 @@
   - Login/logout actions
   - Theme management (light/dark)
   - Notification state
-  - Currently local only, no API integration
+  - Token management for API calls
 
-#### Root Component
-- **App.tsx**: Contains basic login UI with demo functionality
-  - Simple email/password form
-  - Mock authentication
-  - Tab interface for logged-in state
-  - Special "Jayden & Lilly" feature (personal content)
-  - **Note**: Not yet integrated with MainTabNavigator
+#### Services
+- **organizationService.ts**: API service for organizations
+  - getOrganizations, getOrganizationById
+  - createOrganization, updateOrganization, deleteOrganization
+  - Graceful error handling
+- **volunteerService.ts**: API service for volunteer hours
+  - getVolunteerHours, getTotalHours
+  - createVolunteerHour, updateVolunteerHour, deleteVolunteerHour
+  - Graceful error handling
+- **notificationService.ts**: API service for notifications
+- **userService.ts**: API service for user data
 
-### Component Structure (Directories Created)
+#### Backend Services
+- **organization.service.ts**: Business logic for organizations
+- **volunteer.service.ts**: Business logic for volunteer hours
+- **notification.service.ts**: Business logic for notifications
+- **auth.service.ts**: Authentication logic
+
+#### Backend Controllers
+- **OrganizationController**: CRUD endpoints for organizations
+- **VolunteerController**: CRUD endpoints for volunteer hours
+- **NotificationController**: Notification management
+
+#### Backend Routes
+- `/api/organizations` - Organization management
+- `/api/volunteer` - Volunteer hour management
+- `/api/notifications` - Notification management
+
+### Component Structure
 ```
 src/components/
-├── common/           (empty - for shared components)
+├── common/
+│   ├── GradientCard.tsx
+│   ├── GradientButton.tsx
+│   ├── NotificationBell.tsx
+│   └── NotificationItem.tsx
 ├── schedule/         (empty - for schedule components)
 ├── volunteering/     (empty - for volunteering components)
 ├── social/           (empty - for social components)
@@ -76,161 +163,147 @@ src/components/
 ```
 
 ### Services & Utils
-- `src/services/`: Empty (prepared for API services)
-- `src/utils/`: Empty (prepared for helper functions)
-- `src/types/`: Contains type definitions
+- `src/services/`: 
+  - organizationService.ts
+  - volunteerService.ts
+  - notificationService.ts
+  - userService.ts
+- `src/utils/`: 
+  - animations.ts
+- `src/types/`: Contains type definitions including Organization, VolunteeringRecord
 
 ## Active Decisions & Considerations
 
 ### Architecture Decisions
-1. **Navigation Flow**: Need to integrate App.tsx auth flow with MainTabNavigator
-   - Current: App.tsx has its own auth UI
-   - Target: Proper stack navigator with auth screens → main tabs
+1. **Navigation Flow**: SimpleNavigation with route parameters support
+   - Custom navigation system using Context API
+   - Supports route parameters for passing data between screens
+   - History-based navigation with goBack functionality
 
 2. **State Management**: Using Zustand
-   - Currently only authStore implemented
-   - Need to create: scheduleStore, volunteeringStore, socialStore, mentalHealthStore
+   - authStore implemented with token management
+   - Services handle API communication
+   - No local stores for volunteering (uses API directly)
 
-3. **Data Persistence**: Expo SQLite selected but not yet implemented
-   - Will need schema design for each feature
-   - Consider migration strategy
+3. **Data Persistence**: PostgreSQL via Prisma
+   - Organization model with full CRUD
+   - VolunteerHour model linked to Organization
+   - Automatic schema migrations with `prisma db push`
+
+4. **Error Handling**: Graceful degradation
+   - Services handle network errors gracefully
+   - Screens show empty states when backend unavailable
+   - Only logs errors in development mode
 
 ### Design System Status
 Current styling approach:
-- Inline StyleSheet in each component
-- Primary color: #6366f1 (Indigo)
-- Consistent 12px border radius
-- 8px grid spacing system
+- Light gradient backgrounds for profile/volunteering screens
+- Consistent typography (h3, h4 for titles)
+- White back buttons with colored icons
+- Consistent spacing and border radius
+- Shadows for depth
+- Theme colors defined in `src/theme/index.ts`
 
-**To Do**: Extract into centralized design system
-- Create `src/theme/` directory
-- Define colors, spacing, typography constants
-- Create reusable component library
+**Implemented**: 
+- Centralized theme system (`src/theme/index.ts`)
+- GradientCard and GradientButton components
+- Consistent spacing, colors, typography
 
 ### Technical Debt Tracking
-1. **App.tsx Integration**: Basic auth UI not using navigation system
-2. **Type Safety**: Some 'any' types in authStore (notifications)
-3. **Error Handling**: No comprehensive error boundary or handling
-4. **Validation**: No form validation library integrated
-5. **Assets**: Images not optimized, have convert-images.js script unused
+1. ✅ **App.tsx Integration**: Navigation system fully implemented
+2. ✅ **Type Safety**: Strong TypeScript types throughout
+3. ✅ **Error Handling**: Comprehensive error handling with graceful degradation
+4. ⚠️ **Validation**: Form validation could be improved (currently basic)
+5. ⚠️ **Assets**: Images not optimized
+6. ✅ **Navigation Parameters**: Route parameters now supported
 
 ## Next Steps (Prioritized)
 
 ### High Priority
-1. **Refactor Authentication Flow**
-   - Move App.tsx login UI to LoginScreen.tsx properly
-   - Set up proper auth stack navigation
-   - Connect authStore to navigation guards
-   - Implement proper protected routes
-
-2. **Design System Foundation**
-   - Create theme constants (colors, typography, spacing)
-   - Build common component library (Button, Card, Input, etc.)
-   - Document component usage patterns
-
-3. **Feature Implementation - Schedule**
+1. **Schedule Feature**
    - Design calendar UI
    - Implement event creation
    - Build task list
-   - Set up local storage
+   - Set up API integration
 
-### Medium Priority
-4. **Complete State Management**
-   - Create remaining Zustand stores
-   - Implement proper TypeScript types
-   - Add persistence layer
-
-5. **Volunteering Feature**
-   - Organization management
-   - Hours logging interface
-   - Progress tracking
-
-6. **Form Management**
-   - Integrate react-hook-form or similar
-   - Build reusable form components
-   - Add validation schemas
-
-### Lower Priority
-7. **Social Features**
-   - Friend connections UI
+2. **Social Features**
+   - Friend connections
    - Activity feed
    - Group management
 
-8. **Mental Health Features**
+### Medium Priority
+3. **Mental Health Features**
    - Mood tracker
    - Journal interface
    - Resources library
 
-9. **Polish & Optimization**
-   - Add loading states
+4. **Form Validation**
+   - Integrate react-hook-form or similar
+   - Build reusable form components
+   - Add validation schemas
+
+5. **Achievement System** (Volunteering)
+   - Badge showcase
+   - Achievement notifications
+   - Milestone tracking
+
+### Lower Priority
+6. **Polish & Optimization**
+   - Add loading states (already have some)
    - Implement error boundaries
    - Optimize performance
-   - Add animations
+   - Add animations (basic animations implemented)
 
 ## Current Blockers
 - None at this moment
 - All dependencies installed and working
 - Development environment stable
+- Backend running and database synced
 
-## Backend Architecture Decision (October 2025)
+## Backend Architecture
 
-### Recommended Stack
+### Stack
 - **Backend**: Node.js + Express + TypeScript
 - **Database**: PostgreSQL (via Prisma ORM)
-- **Deployment**: Railway (recommended) or Render/Fly.io
-- **Authentication**: JWT with refresh tokens
-- **API Design**: RESTful API (with React Query integration)
+- **Authentication**: JWT with mock token support for development
+- **API Design**: RESTful API
 
-### Rationale
-1. **TypeScript Consistency**: Matches frontend, shared types possible
-2. **PostgreSQL**: Relational data fits our needs (users, events, volunteering, social)
-3. **Prisma**: Excellent TypeScript support, type-safe queries, easy migrations
-4. **Railway**: Simple deployment, PostgreSQL included, free tier, git-based deploys
-5. **REST API**: Simple, works well with React Query, easy to cache
+### Database Schema
+- **User**: User accounts with authentication
+- **Organization**: Volunteer organizations with categories, contact info
+- **VolunteerHour**: Volunteer hour records linked to Organization
+- **Notification**: User notifications
+- **Event**: Schedule events (future)
+- **MoodEntry**: Mental health entries (future)
+- **JournalEntry**: Journal entries (future)
+- **Friendship**: Social connections (future)
 
-### Implementation Plan
-1. Set up backend project structure
-2. Initialize Prisma with database schema
-3. Build authentication endpoints (email/password, Google, Apple)
-4. Create user management endpoints
-5. Implement feature-specific endpoints (schedule, volunteering, social, mental health)
-6. Deploy to Railway
-7. Connect frontend via React Query
-
-### Files Created
-- `memory-bank/backend-architecture.md` - Complete backend architecture documentation
-- `BACKEND_SETUP.md` - Step-by-step setup guide
-- `memory-bank/gcp-deployment.md` - Complete GCP deployment guide
-- `GCP_DEPLOYMENT.md` - Quick reference for GCP setup
-
-### Deployment Strategy
-- **Mobile App**: Deploys to App Store/Play Store via Expo EAS Build (separate from backend)
-- **Backend API**: Deploy to **Cloud Run** (recommended) or App Engine
-- **Database**: **Cloud SQL for PostgreSQL** (fully managed)
-- **Why not GKE**: Overkill for single backend API - use Cloud Run instead
-
-## Open Questions (Resolved)
-1. ✅ **Backend Strategy**: Building backend now with Node.js + Express + PostgreSQL
-2. ✅ **Database**: PostgreSQL selected for relational data needs
-3. ✅ **Deployment**: Railway recommended for simplicity and PostgreSQL inclusion
-4. **Authentication Provider**: Social auth (Google, Apple) - implement after email/password
-5. **Data Sync**: Hybrid approach - offline-first with background sync
-6. **Parent Dashboard**: Defer to later phase after core features solid
-7. **Testing Strategy**: Start with critical paths (auth, data integrity) soon
+### API Endpoints
+- `/api/organizations` - Full CRUD for organizations
+- `/api/volunteer` - Full CRUD for volunteer hours
+- `/api/notifications` - Notification management
+- `/api/auth` - Authentication endpoints
+- `/api/users` - User management
 
 ## Environment Notes
-- Development on macOS (darwin 24.5.0)
+- Development on macOS (darwin 25.1.0)
 - Using zsh shell
 - Workspace: `/Users/nitinpunnen/Documents/Code/TeenLifeManager`
 - Node/npm environment set up correctly
 - All Expo dependencies working
+- Backend running on port 3000
+- Database: PostgreSQL on localhost:5432
 
 ## Key Files to Reference
-- `package.json`: All dependencies and scripts
-- `App.tsx`: Current entry point (needs refactoring)
-- `src/navigation/MainTabNavigator.tsx`: Main navigation structure
-- `src/store/authStore.ts`: Authentication state management
-- `src/types/index.ts`: TypeScript type definitions
+- `frontend/App.tsx`: Main entry point with screen routing
+- `frontend/src/navigation/SimpleNavigation.tsx`: Navigation system
+- `frontend/src/store/authStore.ts`: Authentication state management
+- `frontend/src/services/organizationService.ts`: Organization API service
+- `frontend/src/services/volunteerService.ts`: Volunteer hours API service
+- `frontend/src/types/index.ts`: TypeScript type definitions
+- `backend/src/services/organization.service.ts`: Organization business logic
+- `backend/src/services/volunteer.service.ts`: Volunteer hours business logic
+- `backend/prisma/schema.prisma`: Database schema
 - `README.md`: Comprehensive feature documentation
 
 ## Communication Notes
@@ -238,15 +311,3 @@ Current styling approach:
 - Development approach: Iterative, feature-by-feature
 - Documentation preference: Comprehensive memory bank system
 - Planning style: Clarifying questions before implementation
-
-## Special Features
-- "Jayden & Lilly" tab in App.tsx appears to be personal/custom feature
-  - Contains image gallery modal
-  - May or may not be part of final production app
-  - Keep or remove based on user preference
-
-
-
-
-
-

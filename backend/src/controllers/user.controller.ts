@@ -36,12 +36,15 @@ export class UserController {
    */
   static async updateMe(req: AuthRequest, res: Response): Promise<void> {
     const userId = req.user!.id;
-    const { displayName, nickname, avatar } = req.body;
+    const { displayName, nickname, avatar, age, grade } = req.body;
 
     const updateData: any = {};
     if (displayName !== undefined) updateData.displayName = displayName;
     if (nickname !== undefined) updateData.nickname = nickname;
     if (avatar !== undefined) updateData.avatar = avatar;
+    // Note: age and grade are not in the User schema yet
+    // These can be stored in a user preferences/metadata table later
+    // For now, we'll accept them but not store them in the User model
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -57,9 +60,16 @@ export class UserController {
       },
     });
 
+    // Return user data with age and grade if provided (stored client-side for now)
+    const responseData = {
+      ...user,
+      ...(age !== undefined && { age }),
+      ...(grade !== undefined && { grade }),
+    };
+
     res.json({
       success: true,
-      data: user,
+      data: responseData,
       message: 'Profile updated successfully',
     } as ApiResponse);
   }

@@ -3,13 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent, EventCategory } from '../types';
+import GradientCard from '../components/common/GradientCard';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 const mockEvents: ScheduleEvent[] = [
   {
@@ -73,26 +75,34 @@ export default function ScheduleScreen() {
   };
 
   const renderEvent = ({ item }: { item: ScheduleEvent }) => (
-    <TouchableOpacity style={[styles.eventCard, { borderLeftColor: item.category.color }]}>
-      <View style={styles.eventHeader}>
-        <Text style={styles.eventTitle}>{item.title}</Text>
-        <View style={[styles.priorityDot, { backgroundColor: getPriorityColor(item.priority) }]} />
-      </View>
-      {item.description && (
-        <Text style={styles.eventDescription}>{item.description}</Text>
-      )}
-      <Text style={styles.eventTime}>
-        {formatTime(item.startTime)} - {formatTime(item.endTime)}
-      </Text>
-    </TouchableOpacity>
+    <GradientCard section="schedule" variant="elevated" style={[styles.eventCard, { borderLeftColor: item.category.color, borderLeftWidth: 4 }]}>
+      <TouchableOpacity activeOpacity={0.7}>
+        <View style={styles.eventHeader}>
+          <View style={styles.eventTitleContainer}>
+            <Ionicons name={item.category.icon as any} size={20} color={item.category.color} style={styles.categoryIcon} />
+            <Text style={styles.eventTitle}>{item.title}</Text>
+          </View>
+          <View style={[styles.priorityDot, { backgroundColor: getPriorityColor(item.priority) }]} />
+        </View>
+        {item.description && (
+          <Text style={styles.eventDescription}>{item.description}</Text>
+        )}
+        <View style={styles.eventTimeContainer}>
+          <Ionicons name="time-outline" size={14} color={colors.schedule.primary} />
+          <Text style={styles.eventTime}>
+            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </GradientCard>
   );
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
-      default: return '#6b7280';
+      case 'high': return colors.error;
+      case 'medium': return colors.warning;
+      case 'low': return colors.success;
+      default: return colors.gray500;
     }
   };
 
@@ -109,37 +119,41 @@ export default function ScheduleScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Schedule</Text>
+        <Text style={styles.headerTitle}>📅 My Schedule</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.viewButton, viewMode === 'calendar' && styles.activeViewButton]}
             onPress={() => setViewMode('calendar')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="calendar" size={20} color={viewMode === 'calendar' ? '#fff' : '#6366f1'} />
+            <Ionicons name="calendar" size={20} color={viewMode === 'calendar' ? colors.white : colors.schedule.primary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.viewButton, viewMode === 'list' && styles.activeViewButton]}
             onPress={() => setViewMode('list')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="list" size={20} color={viewMode === 'list' ? '#fff' : '#6366f1'} />
+            <Ionicons name="list" size={20} color={viewMode === 'list' ? colors.white : colors.schedule.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
       {viewMode === 'calendar' ? (
-        <View style={styles.calendarContainer}>
+        <GradientCard section="schedule" variant="elevated" style={styles.calendarContainer}>
           <Calendar
             onDayPress={(day) => setSelectedDate(day.dateString)}
             markedDates={{
-              [selectedDate]: { selected: true, selectedColor: '#6366f1' },
+              [selectedDate]: { selected: true, selectedColor: colors.schedule.primary },
             }}
             theme={{
-              selectedDayBackgroundColor: '#6366f1',
-              todayTextColor: '#6366f1',
-              arrowColor: '#6366f1',
+              selectedDayBackgroundColor: colors.schedule.primary,
+              todayTextColor: colors.schedule.primary,
+              arrowColor: colors.schedule.primary,
+              textDayFontWeight: '600',
+              textMonthFontWeight: '700',
             }}
           />
-        </View>
+        </GradientCard>
       ) : (
         <View style={styles.listContainer}>
           <FlatList
@@ -147,12 +161,12 @@ export default function ScheduleScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderEvent}
             showsVerticalScrollIndicator={false}
-            style={styles.listContainer}
+            contentContainerStyle={styles.listContent}
           />
         </View>
       )}
 
-      <View style={styles.selectedDateContainer}>
+      <GradientCard section="schedule" variant="border" style={styles.selectedDateContainer}>
         <Text style={styles.selectedDateTitle}>
           {new Date(selectedDate).toLocaleDateString('en-US', { 
             weekday: 'long', 
@@ -161,10 +175,13 @@ export default function ScheduleScreen() {
             day: 'numeric' 
           })}
         </Text>
-        <Text style={styles.eventCount}>
-          {todayEvents.length} event{todayEvents.length !== 1 ? 's' : ''}
-        </Text>
-      </View>
+        <View style={styles.eventCountContainer}>
+          <Ionicons name="calendar-outline" size={16} color={colors.schedule.primary} />
+          <Text style={styles.eventCount}>
+            {todayEvents.length} event{todayEvents.length !== 1 ? 's' : ''} today
+          </Text>
+        </View>
+      </GradientCard>
 
       <View style={styles.eventsContainer}>
         <FlatList
@@ -172,12 +189,25 @@ export default function ScheduleScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderEvent}
           showsVerticalScrollIndicator={false}
-          style={styles.eventsContainer}
+          contentContainerStyle={styles.eventsContent}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="calendar-outline" size={48} color={colors.gray400} />
+              <Text style={styles.emptyStateText}>No events scheduled for this day</Text>
+            </View>
+          }
         />
       </View>
 
-      <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add" size={24} color="#fff" />
+      <TouchableOpacity style={styles.addButton} activeOpacity={0.8}>
+        <LinearGradient
+          colors={[colors.schedule.primary, colors.schedule.primaryLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.addButtonGradient}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -186,123 +216,138 @@ export default function ScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    ...typography.h3,
+    color: colors.gray900,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: spacing.sm,
   },
   viewButton: {
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#6366f1',
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.schedule.primary,
+    backgroundColor: colors.white,
   },
   activeViewButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.schedule.primary,
   },
   calendarContainer: {
-    backgroundColor: '#fff',
-    margin: 20,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    margin: spacing.lg,
+    padding: spacing.sm,
   },
   listContainer: {
     flex: 1,
-    padding: 20,
+  },
+  listContent: {
+    padding: spacing.lg,
   },
   selectedDateContainer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
   selectedDateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
+    ...typography.h4,
+    color: colors.gray900,
+    marginBottom: spacing.xs,
+  },
+  eventCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   eventCount: {
-    fontSize: 14,
-    color: '#6b7280',
+    ...typography.bodySmall,
+    color: colors.schedule.primary,
+    fontWeight: '600',
   },
   eventsContainer: {
     flex: 1,
-    padding: 20,
+  },
+  eventsContent: {
+    padding: spacing.lg,
   },
   eventCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    marginBottom: spacing.md,
+    padding: 0,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
+  },
+  eventTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  categoryIcon: {
+    marginRight: spacing.sm,
   },
   eventTitle: {
-    fontSize: 16,
+    ...typography.bodyLarge,
+    color: colors.gray900,
     fontWeight: '600',
-    color: '#1f2937',
     flex: 1,
   },
   priorityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   eventDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
+    ...typography.bodySmall,
+    color: colors.gray600,
+    marginBottom: spacing.sm,
+  },
+  eventTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   eventTime: {
-    fontSize: 12,
-    color: '#9ca3af',
-    fontWeight: '500',
+    ...typography.labelSmall,
+    color: colors.gray500,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+  },
+  emptyStateText: {
+    ...typography.body,
+    color: colors.gray500,
+    marginTop: spacing.md,
+    textAlign: 'center',
   },
   addButton: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#6366f1',
+    bottom: spacing.lg,
+    right: spacing.lg,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: 'hidden',
+    ...shadows.xl,
+  },
+  addButtonGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
 });

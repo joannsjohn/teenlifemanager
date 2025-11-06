@@ -6,7 +6,8 @@ type TabName = keyof MainTabParamList;
 
 interface NavigationContextType {
   currentScreen: ScreenName;
-  navigate: (screen: ScreenName) => void;
+  currentParams: any;
+  navigate: (screen: ScreenName, params?: any) => void;
   goBack: () => void;
   screenHistory: ScreenName[];
 }
@@ -45,9 +46,11 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   initialScreen = 'Test' 
 }) => {
   const [screenHistory, setScreenHistory] = useState<ScreenName[]>([initialScreen]);
+  const [paramsHistory, setParamsHistory] = useState<any[]>([undefined]);
 
-  const navigate = (screen: ScreenName) => {
+  const navigate = (screen: ScreenName, params?: any) => {
     setScreenHistory(prev => [...prev, screen]);
+    setParamsHistory(prev => [...prev, params]);
   };
 
   const goBack = () => {
@@ -57,12 +60,19 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
       }
       return prev;
     });
+    setParamsHistory(prev => {
+      if (prev.length > 1) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
   };
 
   const currentScreen = screenHistory[screenHistory.length - 1];
+  const currentParams = paramsHistory[paramsHistory.length - 1];
 
   return (
-    <NavigationContext.Provider value={{ currentScreen, navigate, goBack, screenHistory }}>
+    <NavigationContext.Provider value={{ currentScreen, currentParams, navigate, goBack, screenHistory }}>
       {children}
     </NavigationContext.Provider>
   );

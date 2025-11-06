@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { MainTabParamList } from '../types';
 import { TabNavigationProvider, useTabNavigation } from './SimpleNavigation';
@@ -10,9 +11,33 @@ import VolunteeringScreen from '../screens/VolunteeringScreen';
 import SocialScreen from '../screens/SocialScreen';
 import MentalHealthScreen from '../screens/MentalHealthScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import NotificationBell from '../components/common/NotificationBell';
+import { getSectionGradient, getSectionColors, typography, spacing, shadows } from '../theme';
+import { fadeIn } from '../utils/animations';
+import { useNavigation } from './SimpleNavigation';
+
+type Section = 'schedule' | 'volunteering' | 'social' | 'mentalHealth' | 'profile';
 
 const TabContent: React.FC = () => {
   const { currentTab, navigateTab } = useTabNavigation();
+  const navigation = useNavigation();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    fadeIn(fadeAnim, 250).start();
+  }, [currentTab]);
+
+  const getSection = (tab: keyof MainTabParamList): Section => {
+    const sectionMap: Record<keyof MainTabParamList, Section> = {
+      Schedule: 'schedule',
+      Volunteering: 'volunteering',
+      Social: 'social',
+      MentalHealth: 'mentalHealth',
+      Profile: 'profile',
+    };
+    return sectionMap[tab];
+  };
 
   const renderTab = () => {
     switch (currentTab) {
@@ -30,6 +55,10 @@ const TabContent: React.FC = () => {
         return <ScheduleScreen />;
     }
   };
+
+  const currentSection = getSection(currentTab);
+  const sectionColors = getSectionColors(currentSection);
+  const headerGradient = getSectionGradient(currentSection);
 
   const getIcon = (tab: keyof MainTabParamList, focused: boolean) => {
     const icons: Record<keyof MainTabParamList, { focused: string; unfocused: string }> = {
@@ -55,17 +84,39 @@ const TabContent: React.FC = () => {
 
   const tabs: (keyof MainTabParamList)[] = ['Schedule', 'Volunteering', 'Social', 'MentalHealth', 'Profile'];
 
+  const getTabColors = (tab: keyof MainTabParamList) => {
+    const section = getSection(tab);
+    return getSectionColors(section);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{getTitle(currentTab)}</Text>
-      </View>
+          <LinearGradient
+            colors={headerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            <Animated.View style={[styles.headerContent, { opacity: fadeAnim }]}>
+              <Text style={styles.headerTitle}>{getTitle(currentTab)}</Text>
+              <NotificationBell
+                onPress={() => navigation.navigate('Notifications' as any)}
+                size={24}
+              />
+            </Animated.View>
+          </LinearGradient>
       <View style={styles.content}>
-        {renderTab()}
+        <Animated.View style={[styles.contentInner, { opacity: fadeAnim }]}>
+          {renderTab()}
+        </Animated.View>
       </View>
-      <View style={[styles.tabBar, { paddingBottom: Platform.OS === 'ios' ? 20 : 5 }]}>
+      <View style={[styles.tabBar, shadows.md, { paddingBottom: Platform.OS === 'ios' ? 20 : 5 }]}>
         {tabs.map((tab) => {
           const isFocused = currentTab === tab;
+          const tabColors = getTabColors(tab);
+          const iconColor = isFocused ? tabColors.primary : '#9CA3AF';
+          const labelColor = isFocused ? tabColors.primary : '#6B7280';
+          
           return (
             <TouchableOpacity
               key={tab}
@@ -73,14 +124,19 @@ const TabContent: React.FC = () => {
               onPress={() => navigateTab(tab)}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name={getIcon(tab, isFocused) as any}
-                size={24}
-                color={isFocused ? '#6366f1' : 'gray'}
-              />
-              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
+              <View style={isFocused && styles.tabIconContainer}>
+                <Ionicons
+                  name={getIcon(tab, isFocused) as any}
+                  size={isFocused ? 26 : 24}
+                  color={iconColor}
+                />
+              </View>
+              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive, { color: labelColor }]}>
                 {getTitle(tab)}
               </Text>
+              {isFocused && (
+                <View style={[styles.tabIndicator, { backgroundColor: tabColors.primary }]} />
+              )}
             </TouchableOpacity>
           );
         })}
@@ -100,42 +156,61 @@ export default function MainTabNavigator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
   },
-  header: {
-    backgroundColor: '#6366f1',
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    paddingBottom: 15,
-    paddingHorizontal: 20,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
+      header: {
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        paddingBottom: spacing.lg,
+        paddingHorizontal: spacing.lg,
+        ...shadows.md,
+      },
+      headerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      },
+      headerTitle: {
+        ...typography.h2,
+        color: '#FFFFFF',
+        flex: 1,
+      },
   content: {
+    flex: 1,
+  },
+  contentInner: {
     flex: 1,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 0,
     height: Platform.OS === 'ios' ? 85 : 60,
-    paddingTop: 8,
+    paddingTop: spacing.sm,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  tabIconContainer: {
+    marginBottom: 2,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 20 : 0,
+    left: '50%',
+    marginLeft: -15,
+    width: 30,
+    height: 3,
+    borderRadius: 2,
   },
   tabLabel: {
-    fontSize: 12,
-    color: 'gray',
-    marginTop: 4,
+    ...typography.labelSmall,
+    marginTop: spacing.xs,
+    fontWeight: '500',
   },
   tabLabelActive: {
-    color: '#6366f1',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

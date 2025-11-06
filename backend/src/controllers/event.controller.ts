@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { EventService, CreateEventDto, UpdateEventDto } from '../services/event.service';
+import { NotificationService } from '../services/notification.service';
 import { AuthRequest } from '../types';
 import { ApiResponse } from '../types';
 
@@ -25,6 +26,22 @@ export class EventController {
       startTime: new Date(data.startTime),
       endTime: data.endTime ? new Date(data.endTime) : undefined,
     });
+
+    // Create notification for event creation
+    try {
+      await NotificationService.createNotification({
+        userId,
+        title: 'Event Created',
+        message: `Your event "${event.title}" has been scheduled`,
+        type: 'schedule',
+        category: 'event_created',
+        actionUrl: `/schedule/event/${event.id}`,
+        metadata: { eventId: event.id },
+      });
+    } catch (error) {
+      // Log error but don't fail the request
+      console.error('Failed to create notification:', error);
+    }
 
     res.status(201).json({
       success: true,

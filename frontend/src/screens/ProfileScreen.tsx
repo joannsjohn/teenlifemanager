@@ -8,11 +8,16 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '../navigation/SimpleNavigation';
+import GradientCard from '../components/common/GradientCard';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
+  const navigation = useNavigation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -20,25 +25,59 @@ export default function ProfileScreen() {
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: logout },
+        { 
+          text: 'Logout', 
+          style: 'destructive', 
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          }
+        },
       ]
     );
   };
 
   const handleEditProfile = () => {
-    // Navigate to edit profile screen
-    Alert.alert('Edit Profile', 'Edit profile functionality coming soon!');
+    navigation.navigate('EditProfile' as any);
+  };
+
+  const handleNotifications = () => {
+    navigation.navigate('Notifications' as any);
+  };
+
+  const handlePrivacy = () => {
+    navigation.navigate('Privacy' as any);
   };
 
   const handleSettings = () => {
-    // Navigate to settings screen
-    Alert.alert('Settings', 'Settings functionality coming soon!');
+    navigation.navigate('Settings' as any);
   };
 
-  if (!user) {
+  const handleHelp = () => {
+    navigation.navigate('Help' as any);
+  };
+
+  const handleAbout = () => {
+    navigation.navigate('About' as any);
+  };
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated || !user) {
     return (
-      <View style={styles.container}>
-        <Text>No user data available</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: spacing.xl }]}>
+        <Ionicons name="person-outline" size={64} color={colors.gray400} />
+        <Text style={[typography.h3, { color: colors.gray600, marginTop: spacing.md, marginBottom: spacing.sm }]}>
+          No user data available
+        </Text>
+        <Text style={[typography.body, { color: colors.gray500, textAlign: 'center', marginBottom: spacing.lg }]}>
+          Please log in to view your profile
+        </Text>
+        <TouchableOpacity
+          style={{ backgroundColor: colors.profile.primary, paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: borderRadius.lg, ...shadows.sm }}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={[typography.button, { color: colors.white }]}>Go to Login</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -86,7 +125,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleNotifications}>
           <View style={styles.menuItemLeft}>
             <View style={styles.menuIcon}>
               <Ionicons name="notifications" size={20} color="#6366f1" />
@@ -96,7 +135,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handlePrivacy}>
           <View style={styles.menuItemLeft}>
             <View style={styles.menuIcon}>
               <Ionicons name="shield-checkmark" size={20} color="#6366f1" />
@@ -116,7 +155,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleHelp}>
           <View style={styles.menuItemLeft}>
             <View style={styles.menuIcon}>
               <Ionicons name="help-circle" size={20} color="#6366f1" />
@@ -126,7 +165,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
           <View style={styles.menuItemLeft}>
             <View style={styles.menuIcon}>
               <Ionicons name="information-circle" size={20} color="#6366f1" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,15 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { useNavigation } from '../navigation/SimpleNavigation';
+import GradientButton from '../components/common/GradientButton';
+import { gradients, typography, spacing, borderRadius, shadows, colors } from '../theme';
+import { fadeIn } from '../utils/animations';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -21,6 +26,11 @@ export default function LoginScreen() {
   
   const { login } = useAuthStore();
   const navigation = useNavigation();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    fadeIn(fadeAnim, 400).start();
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -68,18 +78,23 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.content}>
+      <LinearGradient
+        colors={['#F8FAFC', '#EDE9FE', '#F3E8FF']}
+        style={StyleSheet.absoluteFill}
+      />
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.title}>Welcome Back! 👋</Text>
           <Text style={styles.subtitle}>Sign in to manage your teen life</Text>
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail" size={20} color="#6b7280" style={styles.inputIcon} />
+          <View style={[styles.inputContainer, shadows.sm]}>
+            <Ionicons name="mail" size={22} color={colors.profile.primary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Email"
+              placeholderTextColor={colors.gray500}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -88,14 +103,15 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
+          <View style={[styles.inputContainer, shadows.sm]}>
+            <Ionicons name="lock-closed" size={22} color={colors.profile.primary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
+              placeholderTextColor={colors.gray500}
               value={password}
               onChangeText={setPassword}
-              secureTextEntry={Boolean(!showPassword)}
+              secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -105,8 +121,8 @@ export default function LoginScreen() {
             >
               <Ionicons 
                 name={showPassword ? "eye-off" : "eye"} 
-                size={20} 
-                color="#6b7280" 
+                size={22} 
+                color={colors.profile.primary} 
               />
             </TouchableOpacity>
           </View>
@@ -115,15 +131,15 @@ export default function LoginScreen() {
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          <GradientButton
+            title={isLoading ? 'Signing In...' : 'Sign In'}
             onPress={handleLogin}
-            disabled={Boolean(isLoading)}
-          >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
+            section="auth"
+            size="large"
+            disabled={isLoading}
+            loading={isLoading}
+            style={styles.loginButton}
+          />
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
@@ -131,13 +147,13 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="logo-google" size={20} color="#db4437" />
+          <TouchableOpacity style={[styles.socialButton, shadows.sm]}>
+            <Ionicons name="logo-google" size={22} color="#DB4437" />
             <Text style={styles.socialButtonText}>Continue with Google</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="logo-apple" size={20} color="#000" />
+          <TouchableOpacity style={[styles.socialButton, shadows.sm]}>
+            <Ionicons name="logo-apple" size={22} color="#000" />
             <Text style={styles.socialButtonText}>Continue with Apple</Text>
           </TouchableOpacity>
         </View>
@@ -148,7 +164,7 @@ export default function LoginScreen() {
             <Text style={styles.footerLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
@@ -156,108 +172,93 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
+    ...typography.h1,
+    color: colors.gray900,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    ...typography.bodyLarge,
+    color: colors.gray600,
     textAlign: 'center',
   },
   form: {
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    marginBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 0,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    ...shadows.md,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#1f2937',
+    paddingVertical: spacing.md,
+    ...typography.body,
+    color: colors.gray900,
   },
   eyeIcon: {
-    padding: 4,
+    padding: spacing.xs,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   forgotPasswordText: {
-    fontSize: 14,
-    color: '#6366f1',
-    fontWeight: '500',
+    ...typography.bodySmall,
+    color: colors.profile.primary,
+    fontWeight: '600',
   },
   loginButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  loginButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    marginBottom: spacing.lg,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#d1d5db',
+    backgroundColor: colors.gray300,
   },
   dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#6b7280',
+    marginHorizontal: spacing.md,
+    ...typography.bodySmall,
+    color: colors.gray500,
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    marginBottom: 12,
+    backgroundColor: colors.white,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 0,
+    marginBottom: spacing.md,
+    ...shadows.sm,
   },
   socialButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-    marginLeft: 12,
+    ...typography.button,
+    color: colors.gray900,
+    marginLeft: spacing.md,
   },
   footer: {
     flexDirection: 'row',
@@ -265,12 +266,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
-    color: '#6b7280',
+    ...typography.bodySmall,
+    color: colors.gray600,
   },
   footerLink: {
-    fontSize: 14,
-    color: '#6366f1',
-    fontWeight: '600',
+    ...typography.bodySmall,
+    color: colors.profile.primary,
+    fontWeight: '700',
   },
 });

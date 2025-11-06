@@ -3,6 +3,7 @@ import { NotFoundError, AuthorizationError } from '../utils/errors';
 import { VolunteerHour, Prisma } from '@prisma/client';
 
 export interface CreateVolunteerHourDto {
+  organizationId?: string;
   organization: string;
   description: string;
   hours: number;

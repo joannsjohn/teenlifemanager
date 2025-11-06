@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { useNavigation } from '../navigation/SimpleNavigation';
+import GradientButton from '../components/common/GradientButton';
+import { typography, spacing, borderRadius, shadows, colors } from '../theme';
+import { fadeIn } from '../utils/animations';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -29,6 +34,11 @@ export default function RegisterScreen() {
   
   const { login } = useAuthStore();
   const navigation = useNavigation();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    fadeIn(fadeAnim, 400).start();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -103,19 +113,24 @@ export default function RegisterScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <LinearGradient
+        colors={['#F8FAFC', '#EDE9FE', '#F3E8FF']}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Create Account 🎉</Text>
             <Text style={styles.subtitle}>Join Teen Life Manager today</Text>
           </View>
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="person" size={20} color="#6b7280" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, shadows.sm]}>
+              <Ionicons name="person" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
+                placeholderTextColor={colors.gray500}
                 value={formData.name}
                 onChangeText={(value) => handleInputChange('name', value)}
                 autoCapitalize="words"
@@ -123,11 +138,12 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" size={20} color="#6b7280" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, shadows.sm]}>
+              <Ionicons name="mail" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
+                placeholderTextColor={colors.gray500}
                 value={formData.email}
                 onChangeText={(value) => handleInputChange('email', value)}
                 keyboardType="email-address"
@@ -136,14 +152,15 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, shadows.sm]}>
+              <Ionicons name="lock-closed" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Password"
+                placeholderTextColor={colors.gray500}
                 value={formData.password}
                 onChangeText={(value) => handleInputChange('password', value)}
-                secureTextEntry={Boolean(!showPassword)}
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -153,20 +170,21 @@ export default function RegisterScreen() {
               >
                 <Ionicons 
                   name={showPassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color="#6b7280" 
+                  size={22} 
+                  color={colors.profile.primary} 
                 />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, shadows.sm]}>
+              <Ionicons name="lock-closed" size={22} color={colors.profile.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
+                placeholderTextColor={colors.gray500}
                 value={formData.confirmPassword}
                 onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                secureTextEntry={Boolean(!showConfirmPassword)}
+                secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -176,18 +194,19 @@ export default function RegisterScreen() {
               >
                 <Ionicons 
                   name={showConfirmPassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color="#6b7280" 
+                  size={22} 
+                  color={colors.profile.primary} 
                 />
               </TouchableOpacity>
             </View>
 
             <View style={styles.row}>
-              <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                <Ionicons name="calendar" size={20} color="#6b7280" style={styles.inputIcon} />
+              <View style={[styles.inputContainer, shadows.sm, { flex: 1, marginRight: spacing.sm }]}>
+                <Ionicons name="calendar" size={22} color={colors.profile.primary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Age"
+                  placeholderTextColor={colors.gray500}
                   value={formData.age}
                   onChangeText={(value) => handleInputChange('age', value)}
                   keyboardType="numeric"
@@ -195,11 +214,12 @@ export default function RegisterScreen() {
                 />
               </View>
 
-              <View style={[styles.inputContainer, { flex: 2, marginLeft: 8 }]}>
-                <Ionicons name="school" size={20} color="#6b7280" style={styles.inputIcon} />
+              <View style={[styles.inputContainer, shadows.sm, { flex: 2, marginLeft: spacing.sm }]}>
+                <Ionicons name="school" size={22} color={colors.profile.primary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Grade"
+                  placeholderTextColor={colors.gray500}
                   value={formData.grade}
                   onChangeText={(value) => handleInputChange('grade', value)}
                   autoCapitalize="words"
@@ -207,15 +227,15 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+            <GradientButton
+              title={isLoading ? 'Creating Account...' : 'Create Account'}
               onPress={handleRegister}
-              disabled={Boolean(isLoading)}
-            >
-              <Text style={styles.registerButtonText}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </Text>
-            </TouchableOpacity>
+              section="auth"
+              size="large"
+              disabled={isLoading}
+              loading={isLoading}
+              style={styles.registerButton}
+            />
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
@@ -223,13 +243,13 @@ export default function RegisterScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-google" size={20} color="#db4437" />
+            <TouchableOpacity style={[styles.socialButton, shadows.sm]}>
+              <Ionicons name="logo-google" size={22} color="#DB4437" />
               <Text style={styles.socialButtonText}>Continue with Google</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={20} color="#000" />
+            <TouchableOpacity style={[styles.socialButton, shadows.sm]}>
+              <Ionicons name="logo-apple" size={22} color="#000" />
               <Text style={styles.socialButtonText}>Continue with Apple</Text>
             </TouchableOpacity>
           </View>
@@ -240,7 +260,7 @@ export default function RegisterScreen() {
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -249,7 +269,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   scrollContent: {
     flexGrow: 1,
@@ -257,99 +276,83 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xxl,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
+    ...typography.h1,
+    color: colors.gray900,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    ...typography.bodyLarge,
+    color: colors.gray600,
     textAlign: 'center',
   },
   form: {
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    marginBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 0,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#1f2937',
+    paddingVertical: spacing.md,
+    ...typography.body,
+    color: colors.gray900,
   },
   eyeIcon: {
-    padding: 4,
+    padding: spacing.xs,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   registerButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  registerButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  registerButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    marginBottom: spacing.lg,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#d1d5db',
+    backgroundColor: colors.gray300,
   },
   dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#6b7280',
+    marginHorizontal: spacing.md,
+    ...typography.bodySmall,
+    color: colors.gray500,
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    marginBottom: 12,
+    backgroundColor: colors.white,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 0,
+    marginBottom: spacing.md,
   },
   socialButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-    marginLeft: 12,
+    ...typography.button,
+    color: colors.gray900,
+    marginLeft: spacing.md,
   },
   footer: {
     flexDirection: 'row',
@@ -357,12 +360,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
-    color: '#6b7280',
+    ...typography.bodySmall,
+    color: colors.gray600,
   },
   footerLink: {
-    fontSize: 14,
-    color: '#6366f1',
-    fontWeight: '600',
+    ...typography.bodySmall,
+    color: colors.profile.primary,
+    fontWeight: '700',
   },
 });

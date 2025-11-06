@@ -29,12 +29,18 @@ app.get('/api/health', (_req, res) => {
 import authRoutes from './routes/auth.routes';
 import eventRoutes from './routes/event.routes';
 import volunteerRoutes from './routes/volunteer.routes';
+import organizationRoutes from './routes/organization.routes';
 import moodRoutes from './routes/mood.routes';
+import userRoutes from './routes/user.routes';
+import notificationRoutes from './routes/notification.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/volunteer', volunteerRoutes);
+app.use('/api/organizations', organizationRoutes);
 app.use('/api/mood', moodRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

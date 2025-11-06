@@ -94,19 +94,22 @@ App.tsx (Root)
 **Store Architecture**:
 ```typescript
 // Separate stores by feature domain
-- authStore      // User authentication, theme, notifications
+- authStore      // User authentication, theme, notifications, token management
 - scheduleStore  // Events, tasks, calendar data (future)
-- volunteeringStore  // Organizations, hours, badges (future)
+// Volunteering uses API services directly (organizationService, volunteerService)
 - socialStore    // Friends, groups, activities (future)
 - mentalHealthStore  // Mood tracking, journal entries (future)
 ```
 
 ### Navigation Pattern
-**Decision**: React Navigation with Bottom Tab Navigator
+**Decision**: Custom SimpleNavigation using Context API
 
 **Pattern**:
 - Bottom tabs for main features (Schedule, Volunteering, Social, Wellness, Profile)
-- Stack navigators nested within each tab for deep navigation
+- Custom navigation system with route parameters support
+- History-based navigation with goBack functionality
+- Screen routing via App.tsx ScreenRenderer component
+- Supports passing parameters between screens
 - Auth flow as separate stack before main tabs
 
 **Implementation**:
@@ -122,13 +125,24 @@ type MainTabParamList = {
 ```
 
 ### Data Persistence
-**Decision**: Expo SQLite for local storage
+**Decision**: PostgreSQL via Prisma ORM (backend) + API services (frontend)
 
 **Rationale**:
-- Offline-first capability
 - Relational data structure fits our use case
-- Fast queries for scheduling and logs
-- Good Expo integration
+- Type-safe queries with Prisma
+- Easy migrations and schema management
+- Centralized data storage
+- RESTful API for frontend communication
+
+**Backend Schema** (Prisma):
+- User, Organization, VolunteerHour, Notification, Event, MoodEntry, JournalEntry, Friendship models
+- Automatic migrations with `prisma db push`
+- Type-safe database client generated
+
+**Frontend Pattern**:
+- API services (organizationService, volunteerService, etc.) handle all data operations
+- Services gracefully handle network errors
+- Empty states shown when backend unavailable
 
 **Schema Strategy**:
 - Normalized tables for each feature
@@ -221,19 +235,34 @@ type LoadingState =
 ```
 
 ### Error Handling
-**Pattern**: Consistent error boundaries and user feedback
+**Pattern**: Graceful degradation with user-friendly feedback
+
+**Implementation**:
+- Services catch network errors and re-throw for caller handling
+- Screens handle errors gracefully with empty states
+- Only log errors in development mode (`__DEV__`)
+- User-friendly empty states when backend unavailable
+- Pull-to-refresh allows retry
 
 ```typescript
-// Service layer returns Result type
-type Result<T> = 
-  | { success: true; data: T }
-  | { success: false; error: string };
+// Service pattern
+try {
+  const data = await fetch(...);
+  return data;
+} catch (error) {
+  if (__DEV__) {
+    console.log('Service unavailable - backend may not be running');
+  }
+  throw error; // Let caller handle
+}
 
-// UI layer handles gracefully
-if (result.success) {
-  // Handle data
-} else {
-  // Show user-friendly error
+// Screen pattern
+try {
+  const data = await service.getData();
+  setData(data);
+} catch (error) {
+  // Set empty defaults, show empty state
+  setData([]);
 }
 ```
 

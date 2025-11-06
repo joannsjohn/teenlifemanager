@@ -7,12 +7,18 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '../navigation/SimpleNavigation';
+import { colors, typography, spacing, shadows } from '../theme';
 
 export default function SettingsScreen() {
   const { user, updateUser, setTheme } = useAuthStore();
+  const navigation = useNavigation();
   
   // Ensure boolean values from store are properly converted
   const getBooleanValue = (value: any): boolean => {
@@ -102,8 +108,27 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+      <LinearGradient
+        colors={['#F8FAFC', '#EDE9FE', '#F3E8FF']}
+        style={StyleSheet.absoluteFill}
+      />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.profile.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>Appearance</Text>
         
         <View style={styles.settingItem}>
@@ -324,14 +349,48 @@ export default function SettingsScreen() {
         <Text style={styles.footerText}>Teen Life Manager v1.0.0</Text>
         <Text style={styles.footerText}>© 2024 All rights reserved</Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+    minHeight: 44,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    ...shadows.sm,
+  },
+  headerTitle: {
+    ...typography.h3,
+    color: colors.gray900,
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: spacing.sm,
+    fontWeight: '600',
+  },
+  placeholder: {
+    width: 44,
   },
   section: {
     backgroundColor: '#fff',

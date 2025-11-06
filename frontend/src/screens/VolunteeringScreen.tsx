@@ -1,491 +1,571 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  TextInput,
-  Modal,
+  RefreshControl,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '../navigation/SimpleNavigation';
 import { VolunteeringRecord, Organization } from '../types';
-
-const mockRecords: VolunteeringRecord[] = [
-  {
-    id: '1',
-    organizationId: '1',
-    organizationName: 'Local Food Bank',
-    activity: 'Food Distribution',
-    description: 'Helped distribute food to families in need',
-    startTime: new Date(2024, 0, 10, 9, 0),
-    endTime: new Date(2024, 0, 10, 13, 0),
-    hours: 4,
-    status: 'approved',
-    supervisorName: 'John Smith',
-    supervisorEmail: 'john@foodbank.org',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    organizationId: '2',
-    organizationName: 'Animal Shelter',
-    activity: 'Dog Walking',
-    description: 'Walked dogs and helped with feeding',
-    startTime: new Date(2024, 0, 12, 14, 0),
-    endTime: new Date(2024, 0, 12, 17, 0),
-    hours: 3,
-    status: 'pending',
-    supervisorName: 'Sarah Johnson',
-    supervisorEmail: 'sarah@animalshelter.org',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const mockOrganizations: Organization[] = [
-  {
-    id: '1',
-    name: 'Local Food Bank',
-    description: 'Helping fight hunger in our community',
-    website: 'https://localfoodbank.org',
-    contactEmail: 'volunteer@localfoodbank.org',
-    contactPhone: '(555) 123-4567',
-    address: '123 Main St, City, State 12345',
-    categories: ['Hunger Relief', 'Community Service'],
-    isVerified: true,
-    createdAt: new Date(),
-  },
-  {
-    id: '2',
-    name: 'Animal Shelter',
-    description: 'Caring for abandoned and rescued animals',
-    website: 'https://animalshelter.org',
-    contactEmail: 'volunteer@animalshelter.org',
-    contactPhone: '(555) 987-6543',
-    address: '456 Oak Ave, City, State 12345',
-    categories: ['Animal Welfare', 'Community Service'],
-    isVerified: true,
-    createdAt: new Date(),
-  },
-];
+import GradientCard from '../components/common/GradientCard';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
+import { volunteerService } from '../services/volunteerService';
+import { organizationService } from '../services/organizationService';
+import { fadeIn } from '../utils/animations';
 
 export default function VolunteeringScreen() {
-  const [activeTab, setActiveTab] = useState<'records' | 'organizations' | 'add'>('records');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newRecord, setNewRecord] = useState({
-    organizationId: '',
-    activity: '',
-    description: '',
-    startTime: '',
-    endTime: '',
-  });
+  const navigation = useNavigation();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [activeTab, setActiveTab] = useState<'records' | 'organizations'>('records');
+  const [records, setRecords] = useState<VolunteeringRecord[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [totalHours, setTotalHours] = useState(0);
+  const [pendingHours, setPendingHours] = useState(0);
 
-  const totalHours = mockRecords
-    .filter(record => record.status === 'approved')
-    .reduce((sum, record) => sum + record.hours, 0);
+  useEffect(() => {
+    fadeIn(fadeAnim, 300).start();
+    loadData();
+  }, []);
 
-  const pendingHours = mockRecords
-    .filter(record => record.status === 'pending')
-    .reduce((sum, record) => sum + record.hours, 0);
-
-  const renderRecord = ({ item }: { item: VolunteeringRecord }) => (
-    <TouchableOpacity style={[styles.recordCard, { borderLeftColor: getStatusColor(item.status) }]}>
-      <View style={styles.recordHeader}>
-        <Text style={styles.organizationName}>{item.organizationName}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
-        </View>
-      </View>
-      <Text style={styles.activityTitle}>{item.activity}</Text>
-      {item.description && (
-        <Text style={styles.description}>{item.description}</Text>
-      )}
-      <View style={styles.recordFooter}>
-        <Text style={styles.hoursText}>{item.hours} hours</Text>
-        <Text style={styles.dateText}>
-          {item.startTime.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric',
-            year: 'numeric'
-          })}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderOrganization = ({ item }: { item: Organization }) => (
-    <TouchableOpacity style={styles.organizationCard}>
-      <View style={styles.organizationHeader}>
-        <Text style={styles.organizationName}>{item.name}</Text>
-        {item.isVerified && (
-          <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-        )}
-      </View>
-      <Text style={styles.organizationDescription}>{item.description}</Text>
-      <View style={styles.categoriesContainer}>
-        {item.categories.map((category, index) => (
-          <View key={index} style={styles.categoryTag}>
-            <Text style={styles.categoryText}>{category}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.organizationFooter}>
-        <Text style={styles.contactText}>{item.contactEmail}</Text>
-        <TouchableOpacity style={styles.contactButton}>
-          <Text style={styles.contactButtonText}>Contact</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return '#10b981';
-      case 'pending': return '#f59e0b';
-      case 'rejected': return '#ef4444';
-      default: return '#6b7280';
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [hoursData, orgsData, totalData] = await Promise.all([
+        volunteerService.getVolunteerHours().catch(() => []),
+        organizationService.getOrganizations().catch(() => []),
+        volunteerService.getTotalHours().catch(() => 0),
+      ]);
+      
+      setRecords(hoursData);
+      setOrganizations(orgsData);
+      setTotalHours(totalData);
+      
+      const pending = hoursData
+        .filter(record => record.status === 'pending')
+        .reduce((sum, record) => sum + record.hours, 0);
+      setPendingHours(pending);
+    } catch (error) {
+      // Silently fail - network errors are expected when backend is not available
+      // Only log in development mode
+      if (__DEV__) {
+        console.log('Volunteering service unavailable - backend may not be running');
+      }
+      // Set empty defaults
+      setRecords([]);
+      setOrganizations([]);
+      setTotalHours(0);
+      setPendingHours(0);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  const handleAddRecord = () => {
-    // Handle adding new record
-    setShowAddModal(false);
-    setNewRecord({
-      organizationId: '',
-      activity: '',
-      description: '',
-      startTime: '',
-      endTime: '',
-    });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadData();
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{totalHours}</Text>
-          <Text style={styles.statLabel}>Total Hours</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{pendingHours}</Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{mockRecords.length}</Text>
-          <Text style={styles.statLabel}>Records</Text>
-        </View>
-      </View>
+  const handleAddHours = (organizationId?: string) => {
+    navigation.navigate('AddVolunteerHours' as any, { organizationId });
+  };
 
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'records' && styles.activeTab]}
-          onPress={() => setActiveTab('records')}
-        >
-          <Text style={[styles.tabText, activeTab === 'records' && styles.activeTabText]}>
-            Records
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'organizations' && styles.activeTab]}
-          onPress={() => setActiveTab('organizations')}
-        >
-          <Text style={[styles.tabText, activeTab === 'organizations' && styles.activeTabText]}>
-            Organizations
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'add' && styles.activeTab]}
-          onPress={() => setActiveTab('add')}
-        >
-          <Text style={[styles.tabText, activeTab === 'add' && styles.activeTabText]}>
-            Add Hours
-          </Text>
-        </TouchableOpacity>
-      </View>
+  const handleAddOrganization = () => {
+    navigation.navigate('AddOrganization' as any);
+  };
 
-      <View style={styles.contentContainer}>
-        {activeTab === 'records' && (
-          <FlatList
-            data={mockRecords}
-            keyExtractor={(item) => item.id}
-            renderItem={renderRecord}
-            showsVerticalScrollIndicator={false}
-            style={styles.contentContainer}
-          />
+  const handleOrganizationPress = (organization: Organization) => {
+    navigation.navigate('OrganizationDetails' as any, { organizationId: organization.id });
+  };
+
+  const handleRecordPress = (record: VolunteeringRecord) => {
+    navigation.navigate('VolunteerHourDetails' as any, { recordId: record.id });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return colors.success;
+      case 'pending': return colors.warning;
+      case 'rejected': return colors.error;
+      default: return colors.gray500;
+    }
+  };
+
+  const renderRecord = ({ item }: { item: VolunteeringRecord }) => (
+    <GradientCard 
+      section="volunteering" 
+      variant="elevated" 
+      style={[styles.recordCard, { borderLeftColor: getStatusColor(item.status), borderLeftWidth: 4 }]}
+    >
+      <TouchableOpacity activeOpacity={0.7} onPress={() => handleRecordPress(item)}>
+        <View style={styles.recordHeader}>
+          <View style={styles.recordHeaderLeft}>
+            <Ionicons name="heart" size={20} color={colors.volunteering.primary} style={styles.recordIcon} />
+            <Text style={styles.organizationName} numberOfLines={1}>{item.organizationName}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+          </View>
+        </View>
+        <Text style={styles.activityTitle}>{item.activity}</Text>
+        {item.description && (
+          <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
         )}
+        <View style={styles.recordFooter}>
+          <View style={styles.hoursContainer}>
+            <Ionicons name="time-outline" size={16} color={colors.volunteering.primary} />
+            <Text style={styles.hoursText}>{item.hours} hours</Text>
+          </View>
+          <Text style={styles.dateText}>
+            {item.startTime.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric',
+              year: 'numeric'
+            })}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </GradientCard>
+  );
 
-        {activeTab === 'organizations' && (
-          <FlatList
-            data={mockOrganizations}
-            keyExtractor={(item) => item.id}
-            renderItem={renderOrganization}
-            showsVerticalScrollIndicator={false}
-            style={styles.contentContainer}
-          />
-        )}
-
-        {activeTab === 'add' && (
-          <View style={styles.addForm}>
-            <Text style={styles.formTitle}>Add Volunteer Hours</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Activity"
-              value={newRecord.activity}
-              onChangeText={(text) => setNewRecord({ ...newRecord, activity: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Description (optional)"
-              value={newRecord.description}
-              onChangeText={(text) => setNewRecord({ ...newRecord, description: text })}
-              multiline={true}
-            />
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddRecord}>
-              <Text style={styles.submitButtonText}>Add Record</Text>
-            </TouchableOpacity>
+  const renderOrganization = ({ item }: { item: Organization }) => (
+    <GradientCard section="volunteering" variant="elevated" style={styles.organizationCard}>
+      <TouchableOpacity activeOpacity={0.7} onPress={() => handleOrganizationPress(item)}>
+        <View style={styles.organizationHeader}>
+          <View style={styles.organizationHeaderLeft}>
+            <Ionicons name="business" size={24} color={colors.volunteering.primary} style={styles.orgIcon} />
+            <Text style={styles.organizationName} numberOfLines={1}>{item.name}</Text>
+          </View>
+          {item.isVerified && (
+            <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+          )}
+        </View>
+        <Text style={styles.organizationDescription} numberOfLines={2}>{item.description}</Text>
+        {item.categories && item.categories.length > 0 && (
+          <View style={styles.categoriesContainer}>
+            {item.categories.slice(0, 3).map((category, index) => (
+              <View key={index} style={[styles.categoryTag, { backgroundColor: colors.volunteering.primary + '20' }]}>
+                <Text style={[styles.categoryText, { color: colors.volunteering.primary }]}>{category}</Text>
+              </View>
+            ))}
           </View>
         )}
-      </View>
+        <View style={styles.organizationFooter}>
+          <TouchableOpacity 
+            style={styles.addHoursButton}
+            onPress={() => handleAddHours(item.id)}
+          >
+            <Ionicons name="add-circle" size={18} color={colors.volunteering.primary} />
+            <Text style={styles.addHoursText}>Add Hours</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </GradientCard>
+  );
 
-      <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add" size={24} color="#fff" />
+  const renderEmptyState = (type: 'records' | 'organizations') => (
+    <View style={styles.emptyState}>
+      <Ionicons 
+        name={type === 'records' ? 'time-outline' : 'business-outline'} 
+        size={64} 
+        color={colors.gray400} 
+      />
+      <Text style={styles.emptyStateTitle}>
+        {type === 'records' ? 'No Volunteer Hours' : 'No Organizations'}
+      </Text>
+      <Text style={styles.emptyStateText}>
+        {type === 'records' 
+          ? 'Start logging your volunteer hours to track your impact!'
+          : 'Add an organization to start tracking volunteer hours!'}
+      </Text>
+      <TouchableOpacity
+        style={styles.emptyStateButton}
+        onPress={type === 'records' ? () => handleAddHours() : handleAddOrganization}
+      >
+        <Text style={styles.emptyStateButtonText}>
+          {type === 'records' ? 'Add Volunteer Hours' : 'Add Organization'}
+        </Text>
       </TouchableOpacity>
     </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+      <LinearGradient
+        colors={['#F8FAFC', '#FEF2F2', '#FEE2E2']}
+        style={StyleSheet.absoluteFill}
+      />
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <GradientCard section="volunteering" variant="gradient" style={styles.statCard}>
+            <Text style={styles.statNumber}>{totalHours.toFixed(1)}</Text>
+            <Text style={styles.statLabel}>Total Hours</Text>
+          </GradientCard>
+          <GradientCard section="volunteering" variant="elevated" style={styles.statCard}>
+            <Text style={[styles.statNumber, { color: colors.volunteering.primary }]}>
+              {pendingHours.toFixed(1)}
+            </Text>
+            <Text style={styles.statLabel}>Pending</Text>
+          </GradientCard>
+          <GradientCard section="volunteering" variant="elevated" style={styles.statCard}>
+            <Text style={[styles.statNumber, { color: colors.volunteering.primary }]}>
+              {records.length}
+            </Text>
+            <Text style={styles.statLabel}>Records</Text>
+          </GradientCard>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'records' && styles.activeTab]}
+            onPress={() => setActiveTab('records')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'records' && styles.activeTabText]}>
+              📝 Records
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'organizations' && styles.activeTab]}
+            onPress={() => setActiveTab('organizations')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'organizations' && styles.activeTabText]}>
+              🏢 Organizations
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content */}
+        <View style={styles.listContainer}>
+          {activeTab === 'records' && (
+            <FlatList
+              data={records}
+              keyExtractor={(item) => item.id}
+              renderItem={renderRecord}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={records.length === 0 ? styles.emptyContainer : styles.listContent}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={isRefreshing} 
+                  onRefresh={handleRefresh}
+                  tintColor={colors.volunteering.primary}
+                />
+              }
+              ListEmptyComponent={!isLoading ? renderEmptyState('records') : null}
+            />
+          )}
+
+          {activeTab === 'organizations' && (
+            <FlatList
+              data={organizations}
+              keyExtractor={(item) => item.id}
+              renderItem={renderOrganization}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={organizations.length === 0 ? styles.emptyContainer : styles.listContent}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={isRefreshing} 
+                  onRefresh={handleRefresh}
+                  tintColor={colors.volunteering.primary}
+                />
+              }
+              ListEmptyComponent={!isLoading ? renderEmptyState('organizations') : null}
+            />
+          )}
+        </View>
+      </Animated.View>
+
+      {/* Floating Action Buttons */}
+      <View style={styles.fabContainer}>
+        {activeTab === 'organizations' && (
+          <TouchableOpacity style={styles.fab} onPress={handleAddOrganization} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[colors.volunteering.primary, colors.volunteering.primaryLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.fabGradient}
+            >
+              <Ionicons name="business" size={24} color={colors.white} />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.fab} onPress={() => handleAddHours()} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[colors.volunteering.primary, colors.volunteering.primaryLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="add" size={28} color={colors.white} />
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
+  },
+  content: {
+    flex: 1,
   },
   statsContainer: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
+    padding: spacing.md,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#6366f1',
-    marginBottom: 4,
+    ...typography.h3,
+    color: colors.white,
+    marginBottom: spacing.xs,
+    fontWeight: '700',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
+    ...typography.labelSmall,
+    color: colors.white,
     textAlign: 'center',
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginHorizontal: 20,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    backgroundColor: colors.white,
+    marginHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xs,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
   },
   activeTab: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.volunteering.primary,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6b7280',
+    ...typography.label,
+    color: colors.gray600,
   },
   activeTabText: {
-    color: '#fff',
+    color: colors.white,
+    fontWeight: '700',
   },
-  contentContainer: {
+  listContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  emptyContainer: {
+    flex: 1,
   },
   recordCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    marginBottom: spacing.md,
+    padding: 0,
+    overflow: 'hidden',
   },
   recordHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    padding: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  recordHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recordIcon: {
+    marginRight: spacing.sm,
   },
   organizationName: {
-    fontSize: 16,
+    ...typography.bodyLarge,
+    color: colors.gray900,
     fontWeight: '600',
-    color: '#1f2937',
     flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.round,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#fff',
+    ...typography.labelSmall,
+    color: colors.white,
+    letterSpacing: 0.5,
+    fontWeight: '700',
   },
   activityTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
+    ...typography.body,
+    color: colors.gray700,
+    fontWeight: '600',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xs,
   },
   description: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 8,
+    ...typography.bodySmall,
+    color: colors.gray600,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
   },
   recordFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray100,
+  },
+  hoursContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   hoursText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6366f1',
+    ...typography.body,
+    color: colors.volunteering.primary,
+    fontWeight: '700',
   },
   dateText: {
-    fontSize: 12,
-    color: '#9ca3af',
+    ...typography.labelSmall,
+    color: colors.gray500,
   },
   organizationCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    marginBottom: spacing.md,
+    padding: 0,
+    overflow: 'hidden',
   },
   organizationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    padding: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  organizationHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  orgIcon: {
+    marginRight: spacing.sm,
   },
   organizationDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
+    ...typography.body,
+    color: colors.gray600,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
   categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
   categoryTag: {
-    backgroundColor: '#e0e7ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.round,
   },
   categoryText: {
-    fontSize: 12,
-    color: '#6366f1',
-    fontWeight: '500',
+    ...typography.labelSmall,
+    fontWeight: '600',
   },
   organizationFooter: {
+    padding: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray100,
+  },
+  addHoursButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.volunteering.primary + '10',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
   },
-  contactText: {
-    fontSize: 12,
-    color: '#6b7280',
+  addHoursText: {
+    ...typography.label,
+    color: colors.volunteering.primary,
+    fontWeight: '600',
+  },
+  emptyState: {
     flex: 1,
-  },
-  contactButton: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  contactButtonText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '500',
-  },
-  addForm: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  submitButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 12,
-    borderRadius: 8,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.xl,
   },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  emptyStateTitle: {
+    ...typography.h3,
+    color: colors.gray900,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  addButton: {
+  emptyStateText: {
+    ...typography.body,
+    color: colors.gray600,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  emptyStateButton: {
+    backgroundColor: colors.volunteering.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    ...shadows.sm,
+  },
+  emptyStateButtonText: {
+    ...typography.button,
+    color: colors.white,
+  },
+  fabContainer: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: spacing.lg,
+    right: spacing.lg,
+    flexDirection: 'column',
+    gap: spacing.md,
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#6366f1',
+    overflow: 'hidden',
+    ...shadows.xl,
+  },
+  fabGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
 });

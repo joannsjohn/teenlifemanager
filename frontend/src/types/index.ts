@@ -161,9 +161,12 @@ export interface Notification {
   title: string;
   message: string;
   type: 'schedule' | 'volunteering' | 'social' | 'mental_health' | 'achievement';
+  category?: string;
   isRead: boolean;
   actionUrl?: string;
+  metadata?: Record<string, any>;
   createdAt: Date;
+  readAt?: Date;
 }
 
 // Navigation Types
@@ -173,7 +176,17 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Profile: undefined;
+  EditProfile: undefined;
+  Notifications: undefined;
+  Privacy: undefined;
   Settings: undefined;
+  Help: undefined;
+  About: undefined;
+  AddOrganization: { onComplete?: (organizationId: string) => void } | undefined;
+  EditOrganization: { organizationId: string };
+  OrganizationDetails: { organizationId: string };
+  AddVolunteerHours: { organizationId?: string } | undefined;
+  VolunteerHourDetails: { recordId: string };
 };
 
 export type MainTabParamList = {

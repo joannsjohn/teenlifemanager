@@ -3,14 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   TextInput,
   Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MoodEntry, MentalHealthResource, Achievement } from '../types';
+import GradientCard from '../components/common/GradientCard';
+import GradientButton from '../components/common/GradientButton';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 const mockMoodEntries: MoodEntry[] = [
   {

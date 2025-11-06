@@ -140,10 +140,9 @@ The API will be available at `http://localhost:3000`
 ## 📚 Documentation
 
 - `memory-bank/` - Complete project documentation
-- `frontend/README.md` - Frontend-specific docs
+- `memory-bank/setup/` - Setup and deployment guides
+- `frontend/README.md` - Frontend-specific docs (if exists)
 - `backend/README.md` - Backend-specific docs
-- `BACKEND_SETUP.md` - Backend setup guide
-- `GCP_DEPLOYMENT.md` - GCP deployment guide
 
 ## 🚢 Deployment
 
@@ -163,7 +162,7 @@ gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/teenlife-api
 gcloud run deploy teenlife-api --image gcr.io/YOUR_PROJECT_ID/teenlife-api
 ```
 
-See `GCP_DEPLOYMENT.md` for detailed instructions.
+See `memory-bank/setup/GCP_DEPLOYMENT.md` for detailed instructions.
 
 ## 🔄 CI/CD
 

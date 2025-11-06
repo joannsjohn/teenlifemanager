@@ -193,7 +193,7 @@ gcloud run deploy teenlife-api \
   --set-env-vars "NODE_ENV=production"
 ```
 
-See `../GCP_DEPLOYMENT.md` for detailed instructions.
+See `../memory-bank/setup/GCP_DEPLOYMENT.md` for detailed instructions.
 
 ## Environment Variables
 

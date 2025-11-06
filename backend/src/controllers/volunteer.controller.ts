@@ -4,6 +4,7 @@ import {
   CreateVolunteerHourDto,
   UpdateVolunteerHourDto,
 } from '../services/volunteer.service';
+import { NotificationService } from '../services/notification.service';
 import { AuthRequest } from '../types';
 import { ApiResponse } from '../types';
 
@@ -28,6 +29,21 @@ export class VolunteerController {
       ...data,
       date: new Date(data.date),
     });
+
+    // Create notification for volunteer hour creation
+    try {
+      await NotificationService.createNotification({
+        userId,
+        title: 'Volunteer Hours Logged',
+        message: `Your ${volunteerHour.hours} hours at ${volunteerHour.organization} have been logged`,
+        type: 'volunteering',
+        category: 'hours_logged',
+        actionUrl: `/volunteering/hours/${volunteerHour.id}`,
+        metadata: { hoursId: volunteerHour.id },
+      });
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+    }
 
     res.status(201).json({
       success: true,
@@ -104,7 +120,39 @@ export class VolunteerController {
       updateData.date = new Date(data.date);
     }
 
+    const oldVolunteerHour = await VolunteerService.getVolunteerHourById(id, userId);
     const volunteerHour = await VolunteerService.updateVolunteerHour(id, userId, updateData);
+
+    // Create notification if hours were approved/rejected
+    if (updateData.verified !== undefined && oldVolunteerHour.verified !== updateData.verified) {
+      try {
+        if (updateData.verified) {
+          await NotificationService.createHoursApprovedNotification(
+            userId,
+            volunteerHour.id,
+            volunteerHour.organization,
+            volunteerHour.hours
+          );
+
+          // Check for milestones
+          const totalHours = await VolunteerService.getTotalHours(userId);
+          const milestones = [10, 50, 100, 200, 500];
+          const reachedMilestone = milestones.find(m => totalHours >= m && totalHours - volunteerHour.hours < m);
+          
+          if (reachedMilestone) {
+            await NotificationService.createVolunteerMilestoneNotification(userId, reachedMilestone);
+          }
+        } else {
+          await NotificationService.createHoursRejectedNotification(
+            userId,
+            volunteerHour.id,
+            volunteerHour.organization
+          );
+        }
+      } catch (error) {
+        console.error('Failed to create notification:', error);
+      }
+    }
 
     res.json({
       success: true,
@@ -145,6 +193,27 @@ export class VolunteerController {
     }
 
     const volunteerHour = await VolunteerService.verifyByCode(verificationCode);
+
+    // Create notification for the user when verified
+    try {
+      await NotificationService.createHoursApprovedNotification(
+        volunteerHour.userId,
+        volunteerHour.id,
+        volunteerHour.organization,
+        volunteerHour.hours
+      );
+
+      // Check for milestones
+      const totalHours = await VolunteerService.getTotalHours(volunteerHour.userId);
+      const milestones = [10, 50, 100, 200, 500];
+      const reachedMilestone = milestones.find(m => totalHours >= m && totalHours - volunteerHour.hours < m);
+      
+      if (reachedMilestone) {
+        await NotificationService.createVolunteerMilestoneNotification(volunteerHour.userId, reachedMilestone);
+      }
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+    }
 
     res.json({
       success: true,

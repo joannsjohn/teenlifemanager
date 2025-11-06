@@ -3,14 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   TextInput,
   Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SocialConnection, SocialActivity } from '../types';
+import GradientCard from '../components/common/GradientCard';
+import GradientButton from '../components/common/GradientButton';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 const mockConnections: SocialConnection[] = [
   {

@@ -24,11 +24,13 @@ model User {
   // Relations
   events          Event[]
   volunteerHours  VolunteerHour[]
+  organizations   Organization[]
   moodEntries     MoodEntry[]
   journalEntries  JournalEntry[]
   friends         Friendship[] @relation("UserFriends")
   friendOf        Friendship[] @relation("FriendOf")
   achievements    UserAchievement[]
+  notifications   Notification[]
   
   @@index([email])
   @@index([googleId])
@@ -55,9 +57,32 @@ model Event {
   @@index([category])
 }
 
+model Organization {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  website       String?
+  contactEmail  String?
+  contactPhone  String?
+  address       String?
+  categories    String[] // ["Hunger Relief", "Animal Welfare", etc.]
+  isVerified    Boolean  @default(false)
+  userId        String?  // null for public/verified orgs
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volunteerHours VolunteerHour[]
+  
+  @@index([name])
+  @@index([userId])
+  @@index([isVerified])
+}
+
 model VolunteerHour {
   id              String   @id @default(uuid())
-  organization    String
+  organizationId  String?
+  organization    String   // Keep for backward compatibility, or use organizationId
   description      String
   hours            Float
   date             DateTime
@@ -71,10 +96,12 @@ model VolunteerHour {
   updatedAt        DateTime @updatedAt
   
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationRef  Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   
   @@index([userId])
   @@index([date])
   @@index([organization])
+  @@index([organizationId])
   @@index([verificationCode])
 }
 
@@ -151,5 +178,26 @@ model UserAchievement {
   @@unique([userId, achievementId])
   @@index([userId])
   @@index([achievementId])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  type        String   // schedule, volunteering, social, mental_health, achievement
+  category    String?  // event_reminder, friend_request, hours_approved, etc.
+  isRead      Boolean  @default(false)
+  actionUrl   String?  // Deep link to relevant screen
+  metadata    Json?    // Additional data (eventId, friendId, etc.)
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
 }
 
