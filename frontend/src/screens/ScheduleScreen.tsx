@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,75 +6,103 @@ import {
   TouchableOpacity,
   FlatList,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '../navigation/SimpleNavigation';
 import { ScheduleEvent, EventCategory } from '../types';
 import GradientCard from '../components/common/GradientCard';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
-
-const mockEvents: ScheduleEvent[] = [
-  {
-    id: '1',
-    title: 'Math Class',
-    description: 'Algebra II - Room 201',
-    startTime: new Date(2024, 0, 15, 9, 0),
-    endTime: new Date(2024, 0, 15, 10, 0),
-    category: { id: '1', name: 'School', color: '#3b82f6', icon: 'school' },
-    priority: 'high',
-    isRecurring: true,
-    isCompleted: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Study Group',
-    description: 'Physics study session with friends',
-    startTime: new Date(2024, 0, 15, 14, 0),
-    endTime: new Date(2024, 0, 15, 16, 0),
-    category: { id: '2', name: 'Study', color: '#10b981', icon: 'book' },
-    priority: 'medium',
-    isRecurring: false,
-    isCompleted: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Soccer Practice',
-    description: 'Team practice at the field',
-    startTime: new Date(2024, 0, 15, 17, 0),
-    endTime: new Date(2024, 0, 15, 19, 0),
-    category: { id: '3', name: 'Sports', color: '#f59e0b', icon: 'football' },
-    priority: 'medium',
-    isRecurring: true,
-    isCompleted: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const mockCategories: EventCategory[] = [
-  { id: '1', name: 'School', color: '#3b82f6', icon: 'school' },
-  { id: '2', name: 'Study', color: '#10b981', icon: 'book' },
-  { id: '3', name: 'Sports', color: '#f59e0b', icon: 'football' },
-  { id: '4', name: 'Social', color: '#8b5cf6', icon: 'people' },
-  { id: '5', name: 'Volunteering', color: '#ef4444', icon: 'heart' },
-];
+import { eventService } from '../services/eventService';
 
 export default function ScheduleScreen() {
+  const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const prevScreenRef = useRef<string>('');
+
+  const loadEvents = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const loadedEvents = await eventService.getEvents();
+      setEvents(loadedEvents);
+    } catch (error) {
+      // Silently fail - network errors are expected when backend is not available
+      if (__DEV__) {
+        console.log('Event service unavailable - backend may not be running');
+      }
+      setEvents([]); // Set empty array on error
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // Reload events when returning from AddEvent screen
+  useEffect(() => {
+    const currentScreen = navigation.currentScreen;
+    const wasOnAddEvent = prevScreenRef.current === 'AddEvent';
+    const wasOnImportEvents = prevScreenRef.current === 'ImportEvents';
+    const isNowOnMain = currentScreen === 'Main';
+
+    // If we were on AddEvent and are now on Main, reload events
+    if ((wasOnAddEvent || wasOnImportEvents) && isNowOnMain) {
+      setTimeout(() => {
+        loadEvents();
+      }, 500);
+    }
+
+    // Update previous screen reference
+    prevScreenRef.current = currentScreen;
+  }, [navigation.currentScreen, loadEvents]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadEvents();
+  };
+
+  const handleOpenImport = () => {
+    navigation.navigate('ImportEvents' as any);
+  };
 
   const getEventsForDate = (date: string) => {
-    return mockEvents.filter(event => {
+    return events.filter(event => {
       const eventDate = event.startTime.toISOString().split('T')[0];
       return eventDate === date;
     });
   };
+
+  // Prepare marked dates for calendar
+  const markedDates = events.reduce((acc, event) => {
+    const dateStr = event.startTime.toISOString().split('T')[0];
+    if (!acc[dateStr]) {
+      acc[dateStr] = {
+        marked: true,
+        dotColor: event.category.color,
+        selected: dateStr === selectedDate,
+        selectedColor: colors.schedule.primary,
+      };
+    }
+    return acc;
+  }, {} as any);
+
+  // Mark selected date
+  if (selectedDate && !markedDates[selectedDate]) {
+    markedDates[selectedDate] = {
+      selected: true,
+      selectedColor: colors.schedule.primary,
+    };
+  }
 
   const renderEvent = ({ item }: { item: ScheduleEvent }) => (
     <GradientCard section="schedule" variant="elevated" style={[styles.eventCard, { borderLeftColor: item.category.color, borderLeftWidth: 4 }]}>
@@ -116,7 +144,36 @@ export default function ScheduleScreen() {
     });
   };
 
+  const formatTimeUntil = (date: Date) => {
+    const now = new Date();
+    const diff = date.getTime() - now.getTime();
+    if (diff <= 0) {
+      return 'Starting now';
+    }
+    const minutes = Math.round(diff / 60000);
+    if (minutes < 60) {
+      return `Starts in ${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours < 24) {
+      if (remainingMinutes === 0) {
+        return `Starts in ${hours}h`;
+      }
+      return `Starts in ${hours}h ${remainingMinutes}m`;
+    }
+    const days = Math.floor(hours / 24);
+    return `Starts in ${days} day${days === 1 ? '' : 's'}`;
+  };
+ 
   const todayEvents = getEventsForDate(selectedDate);
+  const upcomingEvent = useMemo(() => {
+    const now = new Date();
+    const upcoming = events
+      .filter(item => item.startTime > now)
+      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0];
+    return upcoming || null;
+  }, [events]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -125,29 +182,74 @@ export default function ScheduleScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>📅 My Schedule</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={[styles.viewButton, viewMode === 'calendar' && styles.activeViewButton]}
-            onPress={() => setViewMode('calendar')}
-            activeOpacity={0.7}
+            style={styles.importButton}
+            onPress={handleOpenImport}
+            activeOpacity={0.8}
           >
-            <Ionicons name="calendar" size={20} color={viewMode === 'calendar' ? colors.white : colors.schedule.primary} />
+            <Ionicons name="document-text-outline" size={18} color={colors.white} />
+            <Text style={styles.importButtonText}>Import</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.viewButton, viewMode === 'list' && styles.activeViewButton]}
-            onPress={() => setViewMode('list')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="list" size={20} color={viewMode === 'list' ? colors.white : colors.schedule.primary} />
-          </TouchableOpacity>
+          <View style={styles.viewToggleGroup}>
+            <TouchableOpacity
+              style={[styles.viewButton, viewMode === 'calendar' && styles.activeViewButton]}
+              onPress={() => setViewMode('calendar')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar" size={20} color={viewMode === 'calendar' ? colors.white : colors.schedule.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.viewButton, viewMode === 'list' && styles.activeViewButton]}
+              onPress={() => setViewMode('list')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="list" size={20} color={viewMode === 'list' ? colors.white : colors.schedule.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
+      </View>
+
+      <View style={styles.overviewContainer}>
+        <GradientCard section="schedule" variant="elevated" style={styles.overviewCard}>
+          {upcomingEvent ? (
+            <>
+              <Text style={styles.overviewLabel}>Next up</Text>
+              <Text style={styles.overviewTitle}>{upcomingEvent.title}</Text>
+              <Text style={styles.overviewMeta}>
+                {upcomingEvent.category.name} • {upcomingEvent.startTime.toLocaleString()}
+              </Text>
+              <View style={styles.overviewFooter}>
+                <View style={styles.overviewBadge}>
+                  <Ionicons name="time-outline" size={16} color={colors.schedule.primary} />
+                  <Text style={styles.overviewBadgeText}>{formatTimeUntil(upcomingEvent.startTime)}</Text>
+                </View>
+                {upcomingEvent.description ? (
+                  <Text style={styles.overviewDescription} numberOfLines={2}>
+                    {upcomingEvent.description}
+                  </Text>
+                ) : null}
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.overviewLabel}>All clear</Text>
+              <Text style={styles.overviewTitle}>You’re caught up</Text>
+              <Text style={styles.overviewMeta}>
+                Paste a syllabus or add an event to plan ahead.
+              </Text>
+              <TouchableOpacity style={styles.overviewAction} onPress={handleOpenImport} activeOpacity={0.7}>
+                <Ionicons name="document-text-outline" size={18} color={colors.schedule.primary} />
+                <Text style={styles.overviewActionText}>Import from text</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </GradientCard>
       </View>
 
       {viewMode === 'calendar' ? (
         <GradientCard section="schedule" variant="elevated" style={styles.calendarContainer}>
           <Calendar
             onDayPress={(day) => setSelectedDate(day.dateString)}
-            markedDates={{
-              [selectedDate]: { selected: true, selectedColor: colors.schedule.primary },
-            }}
+            markedDates={markedDates}
             theme={{
               selectedDayBackgroundColor: colors.schedule.primary,
               todayTextColor: colors.schedule.primary,
@@ -160,11 +262,26 @@ export default function ScheduleScreen() {
       ) : (
         <View style={styles.listContainer}>
           <FlatList
-            data={mockEvents}
+            data={events}
             keyExtractor={(item) => item.id}
             renderItem={renderEvent}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.schedule.primary}
+              />
+            }
+            ListEmptyComponent={
+              !isLoading ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="calendar-outline" size={48} color={colors.gray400} />
+                  <Text style={styles.emptyStateText}>No events scheduled</Text>
+                </View>
+              ) : null
+            }
           />
         </View>
       )}
@@ -193,16 +310,31 @@ export default function ScheduleScreen() {
           renderItem={renderEvent}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.eventsContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.schedule.primary}
+            />
+          }
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={48} color={colors.gray400} />
-              <Text style={styles.emptyStateText}>No events scheduled for this day</Text>
-            </View>
+            !isLoading ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={48} color={colors.gray400} />
+                <Text style={styles.emptyStateText}>No events scheduled for this day</Text>
+              </View>
+            ) : null
           }
         />
       </View>
 
-      <TouchableOpacity style={styles.addButton} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.addButton}
+        activeOpacity={0.8}
+        onPress={() => {
+          navigation.navigate('AddEvent' as any);
+        }}
+      >
         <LinearGradient
           colors={[colors.schedule.primary, colors.schedule.primaryLight]}
           start={{ x: 0, y: 0 }}
@@ -238,6 +370,7 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
   },
   viewButton: {
@@ -358,5 +491,80 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  importButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.schedule.primary,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    gap: spacing.xs,
+  },
+  importButtonText: {
+    ...typography.labelSmall,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  viewToggleGroup: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  overviewContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  overviewCard: {
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  overviewLabel: {
+    ...typography.labelSmall,
+    color: colors.gray600,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  overviewTitle: {
+    ...typography.h4,
+    color: colors.gray900,
+    fontWeight: '600',
+  },
+  overviewMeta: {
+    ...typography.bodySmall,
+    color: colors.gray600,
+  },
+  overviewFooter: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  overviewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: '#EEF2FF',
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  overviewBadgeText: {
+    ...typography.labelSmall,
+    color: colors.schedule.primary,
+    fontWeight: '600',
+  },
+  overviewDescription: {
+    ...typography.bodySmall,
+    color: colors.gray600,
+  },
+  overviewAction: {
+    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  overviewActionText: {
+    ...typography.labelSmall,
+    color: colors.schedule.primary,
+    fontWeight: '600',
   },
 });

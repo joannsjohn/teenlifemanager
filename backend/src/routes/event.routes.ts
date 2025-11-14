@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', EventController.createEvent);
+router.post('/import', EventController.extractEventsFromText);
 router.get('/', EventController.getEvents);
 router.get('/:id', EventController.getEventById);
 router.put('/:id', EventController.updateEvent);

@@ -24,6 +24,10 @@ export const env = {
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   appleClientId: process.env.APPLE_CLIENT_ID || '',
   appleClientSecret: process.env.APPLE_CLIENT_SECRET || '',
+
+  // AI
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
 } as const;
 
 // Validate required environment variables

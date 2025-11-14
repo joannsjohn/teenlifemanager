@@ -82,7 +82,7 @@ const TabContent: React.FC = () => {
     return titles[tab];
   };
 
-  const tabs: (keyof MainTabParamList)[] = ['Schedule', 'Volunteering', 'Social', 'MentalHealth', 'Profile'];
+  const tabs: (keyof MainTabParamList)[] = ['Schedule', 'Volunteering', 'MentalHealth', 'Profile'];
 
   const getTabColors = (tab: keyof MainTabParamList) => {
     const section = getSection(tab);

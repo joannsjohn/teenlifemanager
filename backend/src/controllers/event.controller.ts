@@ -3,6 +3,7 @@ import { EventService, CreateEventDto, UpdateEventDto } from '../services/event.
 import { NotificationService } from '../services/notification.service';
 import { AuthRequest } from '../types';
 import { ApiResponse } from '../types';
+import { AIEventExtractionService } from '../services/ai-event-extraction.service';
 
 export class EventController {
   /**
@@ -127,6 +128,42 @@ export class EventController {
     res.json({
       success: true,
       message: 'Event deleted successfully',
+    } as ApiResponse);
+  }
+
+  /**
+   * Extract event suggestions from pasted text using AI
+   * POST /api/events/import
+   */
+  static async extractEventsFromText(req: AuthRequest, res: Response): Promise<void> {
+    const userId = req.user!.id;
+    const { text, timezone, preference } = req.body as { text?: string; timezone?: string; preference?: string };
+
+    if (!text || text.trim().length === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Text is required to extract events',
+      } as ApiResponse);
+      return;
+    }
+
+    if (!AIEventExtractionService.isConfigured()) {
+      res.status(503).json({
+        success: false,
+        error: 'AI event extraction is not configured',
+      } as ApiResponse);
+      return;
+    }
+
+    const result = await AIEventExtractionService.extractEventsFromText(text, { timezone, preference });
+
+    res.json({
+      success: true,
+      data: {
+        userId,
+        summary: result.summary,
+        events: result.events,
+      },
     } as ApiResponse);
   }
 }

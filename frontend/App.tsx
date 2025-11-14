@@ -19,6 +19,8 @@ import EditOrganizationScreen from './src/screens/EditOrganizationScreen';
 import OrganizationDetailsScreen from './src/screens/OrganizationDetailsScreen';
 import AddVolunteerHoursScreen from './src/screens/AddVolunteerHoursScreen';
 import VolunteerHourDetailsScreen from './src/screens/VolunteerHourDetailsScreen';
+import AddEventScreen from './src/screens/AddEventScreen';
+import ImportEventsScreen from './src/screens/ImportEventsScreen';
 
 const ScreenRenderer: React.FC = () => {
   const { currentScreen, currentParams } = useNavigation();
@@ -45,7 +47,7 @@ const ScreenRenderer: React.FC = () => {
     case 'About':
       return <AboutScreen />;
     case 'AddOrganization':
-      return <AddOrganizationScreen route={{ params: currentParams }} />;
+      return <AddOrganizationScreen />;
     case 'EditOrganization':
       return <EditOrganizationScreen route={{ params: currentParams }} />;
     case 'OrganizationDetails':
@@ -54,6 +56,10 @@ const ScreenRenderer: React.FC = () => {
       return <AddVolunteerHoursScreen route={{ params: currentParams }} />;
     case 'VolunteerHourDetails':
       return <VolunteerHourDetailsScreen route={{ params: currentParams }} />;
+    case 'AddEvent':
+      return <AddEventScreen />;
+    case 'ImportEvents':
+      return <ImportEventsScreen />;
     default:
       return <TestScreen />;
   }

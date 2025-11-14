@@ -187,6 +187,8 @@ export type RootStackParamList = {
   OrganizationDetails: { organizationId: string };
   AddVolunteerHours: { organizationId?: string } | undefined;
   VolunteerHourDetails: { recordId: string };
+  AddEvent: undefined;
+  ImportEvents: undefined;
 };
 
 export type MainTabParamList = {
